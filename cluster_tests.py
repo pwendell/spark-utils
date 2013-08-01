@@ -23,6 +23,9 @@ def run_cmd(cmd, stdin=""):
 
 run_cmd("%s -rmr /test" % HDFS_BIN)
 
+result = run_cmd(SPARK_SHELL, "sc.master.startsWith(\"local\")")
+assert "res0: Boolean = false" in result, "Spark is running in local mode"
+
 create_kv_data = \
 """
 sc.makeRDD(1 to 10000, 100).map(x => "%s,%s".format(x % 10, x)).saveAsTextFile("/test");
