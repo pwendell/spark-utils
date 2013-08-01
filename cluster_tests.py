@@ -23,7 +23,12 @@ def run_cmd(cmd, stdin=""):
 
 run_cmd("%s -rmr /test" % HDFS_BIN)
 
-result = run_cmd(SPARK_SHELL, "sc.master.startsWith(\"local\")")
+spark_local_check = \
+"""
+sc.master.startsWith("local");
+exit;
+"""
+result = run_cmd(SPARK_SHELL, spark_local_check)
 assert "res0: Boolean = false" in result, "Spark is running in local mode"
 
 create_kv_data = \
