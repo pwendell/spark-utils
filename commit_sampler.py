@@ -95,13 +95,12 @@ write_summary("Sampled %s merges out of %s between %s and %s\n" % (
 for (ref, desc, date) in sampled_merges_with_info:
     write_summary("%s\t%s\t%s\n" % (ref, date, desc))
 
-def run_test(commit_id):
+def run_test((ref, desc, date)):
     out_file = open(config_file_path, 'w')
     for line in initial_config_file:
-        if "COMMIT_ID =" in line:
-            out_file.write("COMMIT_ID = '%s'\n" % commit_id)
-        else:
-            out_file.write(line)
+        out_file.write(line)
+    out_file.write("COMMIT_ID = '%s'\n" % ref)
+    out_file.write("OUTPUT_FILENAME = 'sample_%s_%s'\n" % (date, ref))
     out_file.close()
     subprocess.check_call("./bin/run", shell=True)
 
@@ -109,7 +108,7 @@ os.chdir(spark_perf_directory)
 for (ref, desc, date) in sampled_merges_with_info:
     write_summary("Running test for commit %s\t%s\t%s\n" % (ref, date, desc))
     try:
-      run_test(ref)
+      run_test((ref, desc, date))
       write_summary("Test for %s succeeded.\n" % ref)
     except Exception as e:
       write_summary("Test for %s failed.\n" % ref)
