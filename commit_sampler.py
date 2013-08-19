@@ -1,8 +1,8 @@
 import argparse
+import commands
 import os
 import subprocess
 import time
-
 
 desc="""Run performance tests at several points in <target-ref>'s git lineage.
 
@@ -59,9 +59,17 @@ spark_perf_directory = args.spark_perf_dir
 sample_count = args.sampled_merges
 
 def run_cmd(cmd):
-  return subprocess.check_output([cmd], shell=True).strip()
+  (code, result) = commands.getstatusoutput(cmd)
+  if code != 0:
+    raise Exception(result)
+  return result.strip()
+  #return subprocess.check_output([cmd], shell=True).strip()
 
 summary_file = open(args.summary_file, 'w')
+
+def write_summary(s):
+  summary_file.write(s)
+  summary_file.flush()
 
 start_dir = os.getcwd()
 os.chdir(spark_dir)
@@ -82,10 +90,10 @@ for ref in sampled_merges:
     sampled_merges_with_info = sampled_merges_with_info + [(ref, desc, date)]
 
 
-summary_file.write("Sampled %s merges out of %s between %s and %s\n" % (
+write_summary("Sampled %s merges out of %s between %s and %s\n" % (
     len(sampled_merges), len(all_merges), target_ref, comparison_ref))
 for (ref, desc, date) in sampled_merges_with_info:
-    summary_file.write("%s\t%s\t%s\n" % (ref, date, desc))
+    write_summary("%s\t%s\t%s\n" % (ref, date, desc))
 
 os.chdir(spark_perf_directory)
 
@@ -99,16 +107,16 @@ def run_test(commit_id):
         else:
             out_file.write(line)
     out_file.close()
-    run_cmd("timeout %s ./bin/run" % args.test_timeout)
+    subprocess.check_call("./bin/run", shell=True)
 
 for (ref, desc, date) in sampled_merges_with_info:
-    summary_file.write("Running test for commit %s\t%s\t%s\n" % (ref, date, desc))
+    write_summary("Running test for commit %s\t%s\t%s\n" % (ref, date, desc))
     try:
       run_test(ref)
-      summary_file.write("Test for %s succeeded.\n" % ref)
+      write_summary("Test for %s succeeded.\n" % ref)
     except Exception as e:
-      summary_file.write("Test for %s failed.\n" % ref)
-      summary_file.write("%s\n" % e)
+      write_summary("Test for %s failed.\n" % ref)
+      write_summary("%s\n" % e)
 
 os.chdir(start_dir)
 summary_file.close()
