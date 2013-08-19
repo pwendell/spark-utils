@@ -1,7 +1,9 @@
 import argparse
 import commands
 import os
+from Queue import Queue
 import subprocess
+import threading
 import time
 
 desc="""Run performance tests at several points in <target-ref>'s git lineage.
@@ -46,9 +48,8 @@ parser.add_argument("--sampled-merges", help="How many merge commits to sample i
     default=10, type=int)
 parser.add_argument("--summary-file", help="File to which summary information is printed.",
     default="results_%s" % time.strftime("%Y-%m-%d_%H-%M-%S"))
-parser.add_argument("--test-timeout", help="Timeout after which tests are considered failed. "
-    "Format should match that of the `timeout` command (e.g. \"1s\", \"10m\").",
-    default="30m")
+parser.add_argument("--test-timeout", help="Timeout in seconds after which tests are considered "
+    "failed. ", default="1800", type=int)
 
 args = parser.parse_args()
 target_ref = args.target_ref
@@ -69,6 +70,29 @@ def run_cmd(cmd):
     raise Exception(result)
   return result.strip()
   #return subprocess.check_output([cmd], shell=True).strip()
+
+# Port of subprocess.check_call with a timeout. Based on 
+# http://stackoverflow.com/questions/1191374/subprocess-with-timeout.
+def check_call_with_timeout(cmd, timeout):
+    shared_process = Queue(1)
+    shared_result = Queue(1)
+    def target():
+        process = subprocess.Popen(cmd, shell=True)
+        shared_process.put(process)
+        ret = process.wait()
+        shared_result.put(ret)
+
+    thread = threading.Thread(target=target)
+    thread.start()
+    thread.join(timeout)
+    if thread.is_alive():
+        shared_process.get().terminate()
+        thread.join()
+        raise Exception("Command timed out: %s" % cmd)
+    else:
+        result = shared_result.get()
+        if result != 0:
+            raise Exception("Command returned non-zero exit (%s): %s" % (result, cmd))
 
 def write_summary(s):
   summary_file.write(s)
@@ -102,7 +126,7 @@ def run_test((ref, desc, date)):
     out_file.write("COMMIT_ID = '%s'\n" % ref)
     out_file.write("OUTPUT_FILENAME = 'sample_%s_%s'\n" % (date, ref))
     out_file.close()
-    subprocess.check_call("./bin/run", shell=True)
+    check_call_with_timeout("./bin/run", args.test_timeout)
 
 os.chdir(spark_perf_directory)
 for (ref, desc, date) in sampled_merges_with_info:
