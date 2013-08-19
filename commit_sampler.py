@@ -20,8 +20,8 @@ For instance:
            =============================
                    SAMPLE SPACE
 
-Note that <comparison-ref> need not be in a different branch. It could just
-be an earlier commit directly in the lineave of <target-ref>.
+Note that <comparison-ref> need not be in a different branch. <comparison-ref>
+can be an earlier commit directly in the lineage of <target-ref>.
 
 # Test various points of the master branch since the last release branch
 # was forked. 
