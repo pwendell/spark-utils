@@ -51,12 +51,17 @@ parser.add_argument("--test-timeout", help="Timeout after which tests are consid
     default="30m")
 
 args = parser.parse_args()
-
 target_ref = args.target_ref
 comparison_ref = args.comparison_ref
 spark_dir = args.spark_dir
 spark_perf_directory = args.spark_perf_dir
 sample_count = args.sampled_merges
+summary_file = open(args.summary_file, 'w')
+
+start_dir = os.getcwd()
+os.chdir(spark_dir)
+config_file_path = os.path.join(spark_perf_directory, "config", "config.py")
+initial_config_file = open(config_file_path).readlines()
 
 def run_cmd(cmd):
   (code, result) = commands.getstatusoutput(cmd)
@@ -65,22 +70,17 @@ def run_cmd(cmd):
   return result.strip()
   #return subprocess.check_output([cmd], shell=True).strip()
 
-summary_file = open(args.summary_file, 'w')
-
 def write_summary(s):
   summary_file.write(s)
   summary_file.flush()
 
-start_dir = os.getcwd()
-os.chdir(spark_dir)
-
+# Determine which merges to test
 merge_base = run_cmd("git merge-base %s %s" % (target_ref, comparison_ref))
 previous_merge = run_cmd("git log %s --oneline --merges |head -n 1 |cut -d ' ' -f 1 " % merge_base)
 all_merges = run_cmd("git log %s..%s --oneline --merges | cut -d ' ' -f 1" % 
     (previous_merge, target_ref)).split("\n")
 step_size = len(all_merges) / sample_count
 sampled_merges = all_merges[0::step_size]
-
 sampled_merges_with_info = []
 for ref in sampled_merges:
     result = run_cmd("git log %s -n 1 --pretty=format:%%s%%+cd" % ref)
@@ -89,19 +89,15 @@ for ref in sampled_merges:
     date = parts[1]
     sampled_merges_with_info = sampled_merges_with_info + [(ref, desc, date)]
 
-
+# Summarize merge info
 write_summary("Sampled %s merges out of %s between %s and %s\n" % (
     len(sampled_merges), len(all_merges), target_ref, comparison_ref))
 for (ref, desc, date) in sampled_merges_with_info:
     write_summary("%s\t%s\t%s\n" % (ref, date, desc))
 
-os.chdir(spark_perf_directory)
-
 def run_test(commit_id):
-    path = os.path.join(spark_perf_directory, "config/config.py")
-    config_file_contents = open(path).readlines()
-    out_file = open(path, 'w')
-    for line in config_file_contents:
+    out_file = open(config_file_path, 'w')
+    for line in initial_config_file:
         if "COMMIT_ID =" in line:
             out_file.write("COMMIT_ID = '%s'\n" % commit_id)
         else:
@@ -109,6 +105,7 @@ def run_test(commit_id):
     out_file.close()
     subprocess.check_call("./bin/run", shell=True)
 
+os.chdir(spark_perf_directory)
 for (ref, desc, date) in sampled_merges_with_info:
     write_summary("Running test for commit %s\t%s\t%s\n" % (ref, date, desc))
     try:
@@ -118,5 +115,8 @@ for (ref, desc, date) in sampled_merges_with_info:
       write_summary("Test for %s failed.\n" % ref)
       write_summary("%s\n" % e)
 
+restored_config_file = open(config_file_path, 'w')
+for line in initial_config_file:
+  restored_config_file.write(line)
 os.chdir(start_dir)
 summary_file.close()
