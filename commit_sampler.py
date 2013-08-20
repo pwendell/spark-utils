@@ -124,7 +124,8 @@ def run_test((ref, desc, date)):
     for line in initial_config_file:
         out_file.write(line)
     out_file.write("COMMIT_ID = '%s'\n" % ref)
-    out_file.write("OUTPUT_FILENAME = 'sample_%s_%s'\n" % (date, ref))
+    clean_date = date.replace(" ", "").replace("-", "")
+    out_file.write("OUTPUT_FILENAME = 'sample_%s_%s'\n" % (clean_date, ref))
     out_file.close()
     check_call_with_timeout("./bin/run", args.test_timeout)
 
