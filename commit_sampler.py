@@ -8,29 +8,30 @@ import time
 
 desc="""Run performance tests at several points in <target-ref>'s git lineage.
 
-Only merge commits are tested. The number of commits tested is determined by
-<sampled_merges>. The domain of merges over which to test is all commits
-between <target-ref> and the common ancestor of <target-ref> and
-<comparison-ref>. 
+Only merge commits are eligible for testing. The number of commits tested 
+is provided as <sampled_merges>. The domain of merges over which to pick samples 
+is the set of commits between <target-ref> and the common ancestor of 
+<target-ref> and <comparison-ref>. The commits are chosen as evenly spaced 
+samples within that domain such that <target-ref> is itself included.
 
-For instance:
+A simple use case is when <comparison-ref> is a direct descendant of 
+<target-ref>:
 
+             <comparison-ref>     <target-ref>
+                   |                   |
+   0<--0<--0<--0<--0<--0<--0<--0<--0<--0<--0<--0
+                   =====================
+                       SAMPLE SPACE
 
-            0<--0<--0<--0 [comparison-ref]
+A more advanced use case is when <comparison-ref> is on a different branch
+than <target-ref>. This is useful for testing commits since two branches
+, such as the master branch and a release branch, diverged.
+
+            0<--0<--0<--0 <comparison-ref>
            /
-   0<--0<--0<--0<--0<--0<--0<--0<--0<--0 [target-ref]
+   0<--0<--0<--0<--0<--0<--0<--0<--0<--0 <target-ref>
            =============================
                    SAMPLE SPACE
-
-Note that <comparison-ref> need not be in a different branch. <comparison-ref>
-can be an earlier commit directly in the lineage of <target-ref>.
-
-# Test various points of the master branch since the last release branch
-# was forked. 
---target-ref=origin/master
---reference-branch=origin/branch-0.7
---sampled-merges=10
-
 """
 
 parser = argparse.ArgumentParser(description=desc, 
@@ -98,13 +99,14 @@ def write_summary(s):
   summary_file.write(s)
   summary_file.flush()
 
-# Determine which merges to test
+# Determine which merges to test.
 merge_base = run_cmd("git merge-base %s %s" % (target_ref, comparison_ref))
 previous_merge = run_cmd("git log %s --oneline --merges |head -n 1 |cut -d ' ' -f 1 " % merge_base)
 all_merges = run_cmd("git log %s..%s --oneline --merges | cut -d ' ' -f 1" % 
     (previous_merge, target_ref)).split("\n")
 step_size = len(all_merges) / sample_count
 sampled_merges = all_merges[0::step_size]
+sampled_merges.reverse() # Test order: oldest to newest commits
 sampled_merges_with_info = []
 for ref in sampled_merges:
     result = run_cmd("git log %s -n 1 --pretty=format:%%s%%+cd" % ref)
@@ -113,7 +115,7 @@ for ref in sampled_merges:
     date = parts[1]
     sampled_merges_with_info = sampled_merges_with_info + [(ref, desc, date)]
 
-# Summarize merge info
+# Summarize merge info.
 write_summary("Sampled %s merges out of %s between %s and %s\n" % (
     len(sampled_merges), len(all_merges), target_ref, comparison_ref))
 for (ref, desc, date) in sampled_merges_with_info:
