@@ -101,8 +101,9 @@ def write_summary(s):
 
 # Determine which merges to test.
 merge_base = run_cmd("git merge-base %s %s" % (target_ref, comparison_ref))
-previous_merge = run_cmd("git log %s --oneline --merges |head -n 1 |cut -d ' ' -f 1 " % merge_base)
-all_merges = run_cmd("git log %s..%s --oneline --merges | cut -d ' ' -f 1" % 
+previous_merge = run_cmd("git log %s --oneline --merges --first-parent | head -n 1 "
+    "|cut -d ' ' -f 1 " % merge_base)
+all_merges = run_cmd("git log %s..%s --oneline --merges --first-parent | cut -d ' ' -f 1" % 
     (previous_merge, target_ref)).split("\n")
 step_size = len(all_merges) / sample_count
 sampled_merges = all_merges[0::step_size]
