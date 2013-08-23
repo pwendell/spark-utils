@@ -24,11 +24,12 @@ def run_cmd(cmd, stdin=""):
 run_cmd("%s -rmr /test" % HDFS_BIN)
 
 # Verify ephemeral HDFS configuration matches local disk setup
-ephemeral_hdfs_conf = "".join(open("./ephemeral-hdfs/conf/core-site.xml").readlines())
-ephemeral_mounts = re.findall("/mnt\d*?", ephemeral_hdfs_conf)
+ephemeral_hdfs_conf = "".join(open("./ephemeral-hdfs/conf/hdfs-site.xml").readlines())
+ephemeral_mounts = re.findall("/mnt\d*", ephemeral_hdfs_conf)
 for mount in ephemeral_mounts:
-  assert os.path.exists(mount) and os.path.isdir(mount), ("Mount point %s is referenced in
-    ephemeral HDFS config, but is not a directory." % mount) 
+  print "Ephemeral mount: %s" % mount
+  assert os.path.exists(mount) and os.path.isdir(mount), ("Mount point %s is referenced in "
+    "ephemeral HDFS config, but is not a directory." % mount) 
 system_mounts = filter(lambda x: x.startswith("mnt"), os.listdir("/"))
 for sys_mount in system_mounts:
   path = "/%s" % sys_mount
