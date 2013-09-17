@@ -1,0 +1,29 @@
+<project>
+  <groupId>spark.audit</groupId>
+  <artifactId>spark-audit</artifactId>
+  <modelVersion>4.0.0</modelVersion>
+  <name>Spark Release Auditor</name>
+  <packaging>jar</packaging>
+  <version>1.0</version>
+  <repositories>
+    <repository>
+      <id>Spray.cc repository</id>
+      <url>http://repo.spray.cc</url>
+    </repository>
+    <repository>
+      <id>Akka repository</id>
+      <url>http://repo.akka.io/releases</url>
+    </repository>
+    <repository>
+      <id>Spark Staging Repo</id>
+      <url>${spark.release.repository}</url>
+    </repository>
+  </repositories>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>${spark.module}</artifactId>
+      <version>${spark.version}</version>
+    </dependency>
+  </dependencies>
+</project>

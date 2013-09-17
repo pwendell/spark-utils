@@ -13,11 +13,16 @@ import urllib2
 
 RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.0-incubating-rc5/files"
 RELEASE_KEY = "9E4FE3AF"
+RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-051"
+RELEASE_VERSION = "0.8.0-incubating"
+SCALA_VERSION = "2.9.3"
 LOG_FILE_NAME = "spark_audit_%s" % time.strftime("%h_%m_%Y_%I_%M_%S")
 LOG_FILE = open(LOG_FILE_NAME, 'w')
 WORK_DIR = "/tmp/audit_%s" % int(time.time()) 
 MAVEN_CMD = "mvn"
 GPG_CMD = "gpg"
+
+print "Starting tests, log output in %s. Test results printed below:" % LOG_FILE_NAME
 
 # Track failures
 failures = []
@@ -32,15 +37,15 @@ def clean_work_files():
   if response == "y":
     os.unlink(LOG_FILE_NAME)
 
-def run_cmd(cmd):
-  print >> sys.stderr, "Running command: %s" % cmd
-  try:
-    return subprocess.check_call(cmd, shell=True, stdout=LOG_FILE)
-  except Exception as e:
+def run_cmd(cmd, exit_on_failure=True):
+  print >> LOG_FILE, "Running command: %s" % cmd
+  ret = subprocess.call(cmd, shell=True, stdout=LOG_FILE)
+  if ret != 0 and exit_on_failure:
     print "Command failed: %s" % cmd
     print "Exception: %s" % e
     clean_work_files()
     sys.exit(-1)
+  return ret
 
 def run_cmd_with_output(cmd):
   print >> sys.stderr, "Running command: %s" % cmd
@@ -56,18 +61,51 @@ def passed(str):
 
 def failed(str):
   failures.append(str)
-  print "[FAILED] %s" % str
+  print "[**FAILED**] %s" % str
 
 def get_url(url):
   return urllib2.urlopen(url).read()
+
+original_dir = os.getcwd()
+
+modules = ["spark-core", "spark-examples", "spark-bagel", "spark-mllib", "spark-streaming",
+           "spark-repl", "spark-repl-bin", "spark-tools", "spark-core"]
+modules = map(lambda m: "%s_%s" % (m, SCALA_VERSION), modules)
+
+os.chdir("sbt_build")
+
+# Check for directories that might interfere with tests
+local_ivy_spark = "~/.ivy2/local/org/apache/spark"
+cache_ivy_spark = "~/.ivy2/cache/org/apache/spark"
+local_maven_spark = "~/.m2/repository/org/apache/spark"
+def ensure_path_not_present(x):
+  if os.path.exists(os.path.expanduser(x)):
+    print "Please remove %s, it can interfere with testing published artifacts." % x
+    sys.exit(-1)
+map(ensure_path_not_present, [local_ivy_spark, cache_ivy_spark, local_maven_spark])
+
+os.environ["SPARK_VERSION"] = RELEASE_VERSION
+os.environ["SPARK_RELEASE_REPOSITORY"] = RELEASE_REPOSITORY
+
+for module in modules:
+  os.environ["SPARK_MODULE"] = module
+  ret = run_cmd("sbt/sbt clean update", exit_on_failure=False)
+  test(ret == 0, "sbt build against '%s' module" % module) 
+
+os.chdir(original_dir)
+os.chdir("maven_build")
+for module in modules:
+  cmd = ('mvn -Dspark.release.repository="%s" -Dspark.version="%s" -Dspark.module="%s" '
+      'clean compile' % (RELEASE_REPOSITORY, RELEASE_VERSION, module))
+  ret = run_cmd(cmd, exit_on_failure=False)
+  test(ret == 0, "maven build against '%s' module" % module)
+os.chdir(original_dir)
 
 if os.path.exists(WORK_DIR):
   print "Working directory '%s' already exists" % WORK_DIR
   sys.exit(-1)
 os.mkdir(WORK_DIR)
 os.chdir(WORK_DIR)
-
-print "Starting tests, log output in %s. Test results printed below:" % LOG_FILE_NAME
 
 index_page = get_url(RELEASE_URL)
 artifact_regex = r = re.compile("<a href=\"(.*.tgz)\">")
@@ -139,3 +177,5 @@ else:
   print "SOME TESTS DID NOT PASS"
   for f in failures:
     print f
+
+os.chdir(original_dir)
