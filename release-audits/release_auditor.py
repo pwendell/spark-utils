@@ -39,7 +39,7 @@ def clean_work_files():
 
 def run_cmd(cmd, exit_on_failure=True):
   print >> LOG_FILE, "Running command: %s" % cmd
-  ret = subprocess.call(cmd, shell=True, stdout=LOG_FILE)
+  ret = subprocess.call(cmd, shell=True, stdout=LOG_FILE, stderr=LOG_FILE)
   if ret != 0 and exit_on_failure:
     print "Command failed: %s" % cmd
     clean_work_files()
@@ -48,7 +48,7 @@ def run_cmd(cmd, exit_on_failure=True):
 
 def run_cmd_with_output(cmd):
   print >> sys.stderr, "Running command: %s" % cmd
-  return subprocess.check_output(cmd, shell=True)
+  return subprocess.check_output(cmd, shell=True, stderr=LOG_FILE)
 
 def test(bool, str):
   if bool:
