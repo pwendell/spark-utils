@@ -42,7 +42,6 @@ def run_cmd(cmd, exit_on_failure=True):
   ret = subprocess.call(cmd, shell=True, stdout=LOG_FILE)
   if ret != 0 and exit_on_failure:
     print "Command failed: %s" % cmd
-    print "Exception: %s" % e
     clean_work_files()
     sys.exit(-1)
   return ret
