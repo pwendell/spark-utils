@@ -11,7 +11,7 @@ import sys
 import time
 import urllib2
 
-RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.0-incubating-rc5/files"
+RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.0-incubating-rc6/files"
 RELEASE_KEY = "9E4FE3AF"
 RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-059/"
 RELEASE_VERSION = "0.8.0-incubating"
