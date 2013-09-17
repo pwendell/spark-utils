@@ -13,7 +13,7 @@ import urllib2
 
 RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.0-incubating-rc5/files"
 RELEASE_KEY = "9E4FE3AF"
-RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-051"
+RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-059/"
 RELEASE_VERSION = "0.8.0-incubating"
 SCALA_VERSION = "2.9.3"
 LOG_FILE_NAME = "spark_audit_%s" % time.strftime("%h_%m_%Y_%I_%M_%S")
@@ -68,8 +68,8 @@ def get_url(url):
 
 original_dir = os.getcwd()
 
-modules = ["spark-core", "spark-examples", "spark-bagel", "spark-mllib", "spark-streaming",
-           "spark-repl", "spark-repl-bin", "spark-tools", "spark-core"]
+modules = ["spark-core", "spark-bagel", "spark-mllib", "spark-streaming",
+           "spark-repl"]
 modules = map(lambda m: "%s_%s" % (m, SCALA_VERSION), modules)
 
 os.chdir("sbt_build")
@@ -77,12 +77,13 @@ os.chdir("sbt_build")
 # Check for directories that might interfere with tests
 local_ivy_spark = "~/.ivy2/local/org/apache/spark"
 cache_ivy_spark = "~/.ivy2/cache/org/apache/spark"
-local_maven_spark = "~/.m2/repository/org/apache/spark"
+local_maven_kafka = "~/.m2/repository/org/apache/kafka"
+local_maven_kafka = "~/.m2/repository/org/apache/spark"
 def ensure_path_not_present(x):
   if os.path.exists(os.path.expanduser(x)):
     print "Please remove %s, it can interfere with testing published artifacts." % x
     sys.exit(-1)
-map(ensure_path_not_present, [local_ivy_spark, cache_ivy_spark, local_maven_spark])
+map(ensure_path_not_present, [local_ivy_spark, cache_ivy_spark, local_maven_kafka])
 
 os.environ["SPARK_VERSION"] = RELEASE_VERSION
 os.environ["SPARK_RELEASE_REPOSITORY"] = RELEASE_REPOSITORY
@@ -95,8 +96,9 @@ for module in modules:
 os.chdir(original_dir)
 os.chdir("maven_build")
 for module in modules:
-  cmd = ('mvn -Dspark.release.repository="%s" -Dspark.version="%s" -Dspark.module="%s" '
-      'clean compile' % (RELEASE_REPOSITORY, RELEASE_VERSION, module))
+  cmd = ('%s --update-snapshots -Dspark.release.repository="%s" -Dspark.version="%s" '
+      '-Dspark.module="%s" clean compile' % 
+      (MAVEN_CMD, RELEASE_REPOSITORY, RELEASE_VERSION, module))
   ret = run_cmd(cmd, exit_on_failure=False)
   test(ret == 0, "maven build against '%s' module" % module)
 os.chdir(original_dir)
