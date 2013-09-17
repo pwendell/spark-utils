@@ -123,7 +123,7 @@ for artifact in artifacts:
   run_cmd("wget %s%s" % (artifact_url, ".sha"))
 
   # Verify signature
-  run_cmd("%s --recv-key %s" % (GPG_CMD, RELEASE_KEY))
+  run_cmd("%s --keyserver pgp.mit.edu --recv-key %s" % (GPG_CMD, RELEASE_KEY))
   run_cmd("%s %s" % (GPG_CMD, key_file))
   passed("Artifact signature verified.")
 
