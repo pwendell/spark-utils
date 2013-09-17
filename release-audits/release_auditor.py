@@ -1,7 +1,7 @@
 # Audits a Spark release published to an Apache home directory.
 # Requires GPG and Maven.
 # usage:
-#   python release_auditor.py 2>stderr_data
+#   python release_auditor.py
 
 import os
 import re
@@ -13,6 +13,8 @@ import urllib2
 
 RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.0-incubating-rc5/files"
 RELEASE_KEY = "9E4FE3AF"
+LOG_FILE_NAME = "spark_audit_%s" % time.strftime("%h_%m_%Y_%I_%M_%S")
+LOG_FILE = open(LOG_FILE_NAME, 'w')
 WORK_DIR = "/tmp/audit_%s" % int(time.time()) 
 MAVEN_CMD = "mvn"
 GPG_CMD = "gpg"
@@ -20,20 +22,24 @@ GPG_CMD = "gpg"
 # Track failures
 failures = []
 
-def delete_work_dir_with_prompt():
+def clean_work_files():
   print "OK to delete scratch directory '%s'? (y/N): " % WORK_DIR
   response = raw_input()
   if response == "y":
     shutil.rmtree(WORK_DIR) 
+  print "Should I delete the log output file '%s'? (y/N): " % LOG_FILE_NAME
+  response = raw_input()
+  if response == "y":
+    os.unlink(LOG_FILE_NAME)
 
 def run_cmd(cmd):
   print >> sys.stderr, "Running command: %s" % cmd
   try:
-    return subprocess.check_call(cmd, shell=True, stdout=sys.stderr)
+    return subprocess.check_call(cmd, shell=True, stdout=LOG_FILE)
   except Exception as e:
     print "Command failed: %s" % cmd
     print "Exception: %s" % e
-    delete_work_dir_with_prompt()
+    clean_work_files()
     sys.exit(-1)
 
 def run_cmd_with_output(cmd):
@@ -60,6 +66,8 @@ if os.path.exists(WORK_DIR):
   sys.exit(-1)
 os.mkdir(WORK_DIR)
 os.chdir(WORK_DIR)
+
+print "Starting tests, log output in %s. Test results printed below:" % LOG_FILE_NAME
 
 index_page = get_url(RELEASE_URL)
 artifact_regex = r = re.compile("<a href=\"(.*.tgz)\">")
@@ -123,7 +131,7 @@ for artifact in artifacts:
   passed("Tests successful")
   os.chdir(WORK_DIR)
 
-delete_work_dir_with_prompt()
+clean_work_files()
 
 if len(failures) == 0:
   print "ALL TESTS PASSED"
