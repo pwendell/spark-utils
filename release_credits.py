@@ -7,12 +7,15 @@
 # group. This is helpful for large releases where merges have happened
 # which include hundreds of commits.
 
+# IMPORTANT: This will miss commits that were not merged via pull requests.
+#            This should be cross-referenced with `git shortlog` output.
+
 import collections
 import os
 import subprocess
 
 SPARK_HOME = "/home/patrick/Documents/spark"
-OLD_TAG = "v0.7.3"
+OLD_TAG = "v0.7.0"
 NEW_TAG = "v0.8.0-incubating"
 
 os.chdir(SPARK_HOME)
