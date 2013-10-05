@@ -35,7 +35,7 @@ def fail(msg):
   sys.exit(-1)
 
 def run_cmd(cmd):
-  subprocess.check_call(cmd, shell=True)
+  subprocess.check_call(cmd.split(" "), shell=True)
 
 def continue_maybe(prompt):
   result = raw_input("\n%s (y/n): " % prompt)
