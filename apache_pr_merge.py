@@ -35,7 +35,10 @@ def fail(msg):
   sys.exit(-1)
 
 def run_cmd(cmd):
-  subprocess.check_call(cmd.split(" "), shell=True)
+  if isinstance(cmd, list):
+    subprocess.check_call(cmd)
+  else:
+    subprocess.check_call(cmd.split(" "))
 
 def continue_maybe(prompt):
   result = raw_input("\n%s (y/n): " % prompt)
@@ -75,9 +78,11 @@ run_cmd("git checkout %s" % target_branch_name)
 merge_message = "Merge pull request #%s from %s\n\n%s\n\n%s" % (pr_num, pr_repo_desc, title, body)
 # This is a bit of a hack to get the merge messages with linebreaks to format correctly
 merge_message_parts = merge_message.split("\n\n")
-merge_message_flags = " ".join(['-m "%s"' % p for p in merge_message_parts])
+merge_message_flags = []
+for p in merge_message_parts:
+  merge_message_flags = merge_message_flags + ["-m", p]
 
-run_cmd('git merge %s %s --no-ff' % (pr_branch_name, merge_message_flags))
+run_cmd(['git', 'merge', pr_branch_name, '--no-ff'] + merge_message_flags)
 
 continue_maybe("Merge complete (local ref %s). Push to %s?" % (
   target_branch_name, PUSH_REMOTE_NAME))
