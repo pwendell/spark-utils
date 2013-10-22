@@ -36,9 +36,9 @@ def fail(msg):
 
 def run_cmd(cmd):
   if isinstance(cmd, list):
-    subprocess.check_call(cmd)
+    return subprocess.check_output(cmd)
   else:
-    subprocess.check_call(cmd.split(" "))
+    return subprocess.check_output(cmd.split(" "))
 
 def continue_maybe(prompt):
   result = raw_input("\n%s (y/n): " % prompt)
@@ -89,7 +89,9 @@ continue_maybe("Merge complete (local ref %s). Push to %s?" % (
 
 run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, target_branch_name, target_ref))
 
+merge_hash = run_cmd("git rev-parse %s" % target_branch_name)
 run_cmd("git checkout @{-1}")
 run_cmd("git branch -D %s" % pr_branch_name)
 run_cmd("git branch -D %s" % target_branch_name)
 print("Pull request #%s merged!" % pr_num)
+print("Merge hash: %s" % merge_hash)
