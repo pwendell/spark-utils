@@ -139,7 +139,7 @@ for artifact in artifacts:
   test(my_sha == release_sha, "Artifact SHA verified.")
 
   # Verify Apache required files
-  dir_name = "-".join(artifact.split("-")[:-1]) # get rid of "-rcX.tgz"
+  dir_name = artifact.replace(".tgz", "")
   run_cmd("tar xvzf %s" % artifact)
   base_files = os.listdir(dir_name)
   test("CHANGES.txt" in base_files, "Tarball contains CHANGES.txt file")
