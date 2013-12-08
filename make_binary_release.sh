@@ -46,7 +46,7 @@ gpg --print-md MD5 spark-$RELEASE_VERSION-bin-hadoop1.tgz > spark-$RELEASE_VERSI
 gpg --print-md SHA512 spark-$RELEASE_VERSION-bin-hadoop1.tgz > spark-$RELEASE_VERSION-bin-hadoop1.tgz.sha
 rm -rf spark-$RELEASE_VERSION-bin-hadoop1
 
-# Hadoop 2 release
+# CDH4 Release
 cp -r incubator-spark spark-$RELEASE_VERSION-bin-cdh4
 cd spark-$RELEASE_VERSION-bin-cdh4
 export MAVEN_OPTS="-Xmx3g -XX:MaxPermSize=1g -XX:ReservedCodeCacheSize=1g"
@@ -59,6 +59,20 @@ gpg --armour --output spark-$RELEASE_VERSION-bin-cdh4.tgz.asc --detach-sig spark
 gpg --print-md MD5 spark-$RELEASE_VERSION-bin-cdh4.tgz > spark-$RELEASE_VERSION-bin-cdh4.tgz.md5
 gpg --print-md SHA512 spark-$RELEASE_VERSION-bin-cdh4.tgz > spark-$RELEASE_VERSION-bin-cdh4.tgz.sha
 rm -rf spark-$RELEASE_VERSION-bin-cdh4
+
+# Hadoop 2 Release
+cp -r incubator-spark spark-$RELEASE_VERSION-bin-hadoop2
+cd spark-$RELEASE_VERSION-bin-hadoop2
+export MAVEN_OPTS="-Xmx3g -XX:MaxPermSize=1g -XX:ReservedCodeCacheSize=1g"
+mvn -Pnew-yarn -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 -DskipTests package
+find . -name test-classes -type d | xargs rm -rf
+find . -name classes -type d | xargs rm -rf
+cd ..
+tar cvzf spark-$RELEASE_VERSION-bin-hadoop2.tgz spark-$RELEASE_VERSION-bin-hadoop2
+gpg --armour --output spark-$RELEASE_VERSION-bin-hadoop2.tgz.asc --detach-sig spark-$RELEASE_VERSION-bin-hadoop2.tgz
+gpg --print-md MD5 spark-$RELEASE_VERSION-bin-hadoop2.tgz > spark-$RELEASE_VERSION-bin-hadoop2.tgz.md5
+gpg --print-md SHA512 spark-$RELEASE_VERSION-bin-hadoop2.tgz > spark-$RELEASE_VERSION-bin-hadoop2.tgz.sha
+rm -rf spark-$RELEASE_VERSION-bin-hadoop2
 
 # Copy data
 ssh $USER_NAME@people.apache.org mkdir /home/USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME
