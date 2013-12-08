@@ -75,12 +75,12 @@ gpg --print-md SHA512 spark-$RELEASE_VERSION-bin-hadoop2.tgz > spark-$RELEASE_VE
 rm -rf spark-$RELEASE_VERSION-bin-hadoop2
 
 # Copy data
-ssh $USER_NAME@people.apache.org mkdir /home/USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME
-scp spark* USER_NAME@people.apache.org:/home/USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME/
+ssh $USER_NAME@people.apache.org mkdir /home/$USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME
+scp spark* $USER_NAME@people.apache.org:/home/$USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME/
 
 # Docs
 cd incubator-spark
 cd docs
 jekyll build
-ssh USER_NAME@people.apache.org mkdir /home/USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME-docs
-scp -r _site/* USER_NAME@people.apache.org:/home/USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME-docs/
+ssh $USER_NAME@people.apache.org mkdir /home/$USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME-docs
+scp -r _site/* $USER_NAME@people.apache.org:/home/$USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME-docs/
