@@ -11,10 +11,10 @@ import sys
 import time
 import urllib2
 
-RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.0-incubating-rc6/files"
+RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.1-incubating-rc1/"
 RELEASE_KEY = "9E4FE3AF"
-RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-059/"
-RELEASE_VERSION = "0.8.0-incubating"
+RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-022/"
+RELEASE_VERSION = "0.8.1-incubating"
 SCALA_VERSION = "2.9.3"
 LOG_FILE_NAME = "spark_audit_%s" % time.strftime("%h_%m_%Y_%I_%M_%S")
 LOG_FILE = open(LOG_FILE_NAME, 'w')
