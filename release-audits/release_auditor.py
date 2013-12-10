@@ -13,7 +13,7 @@ import urllib2
 
 RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.1-incubating-rc1/"
 RELEASE_KEY = "9E4FE3AF"
-RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-022/"
+RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-034/"
 RELEASE_VERSION = "0.8.1-incubating"
 SCALA_VERSION = "2.9.3"
 LOG_FILE_NAME = "spark_audit_%s" % time.strftime("%h_%m_%Y_%I_%M_%S")
@@ -71,11 +71,9 @@ modules = ["spark-core", "spark-bagel", "spark-mllib", "spark-streaming",
            "spark-repl"]
 modules = map(lambda m: "%s_%s" % (m, SCALA_VERSION), modules)
 
-os.chdir("blank_sbt_build")
-
 # Check for directories that might interfere with tests
-local_ivy_spark = "~/.ivy2/local/org/apache/spark"
-cache_ivy_spark = "~/.ivy2/cache/org/apache/spark"
+local_ivy_spark = "~/.ivy2/local/org.apache.spark"
+cache_ivy_spark = "~/.ivy2/cache/org.apache.spark"
 local_maven_kafka = "~/.m2/repository/org/apache/kafka"
 local_maven_kafka = "~/.m2/repository/org/apache/spark"
 def ensure_path_not_present(x):
@@ -84,15 +82,22 @@ def ensure_path_not_present(x):
     sys.exit(-1)
 map(ensure_path_not_present, [local_ivy_spark, cache_ivy_spark, local_maven_kafka])
 
+# SBT build tests 
+os.chdir("blank_sbt_build")
 os.environ["SPARK_VERSION"] = RELEASE_VERSION
 os.environ["SPARK_RELEASE_REPOSITORY"] = RELEASE_REPOSITORY
-
 for module in modules:
   os.environ["SPARK_MODULE"] = module
   ret = run_cmd("sbt/sbt clean update", exit_on_failure=False)
   test(ret == 0, "sbt build against '%s' module" % module) 
-
 os.chdir(original_dir)
+
+os.chdir("sbt_app_build")
+ret = run_cmd("sbt/sbt clean run", exit_on_failure=False)
+test(ret == 0, "sbt application")
+os.chdir(original_dir)
+
+# Maven build tests
 os.chdir("blank_maven_build")
 for module in modules:
   cmd = ('%s --update-snapshots -Dspark.release.repository="%s" -Dspark.version="%s" '
@@ -102,6 +107,15 @@ for module in modules:
   test(ret == 0, "maven build against '%s' module" % module)
 os.chdir(original_dir)
 
+os.chdir("maven_app_build")
+mvn_exec_cmd = ('%s --update-snapshots -Dspark.release.repository="%s" -Dspark.version="%s" '
+                'clean compile exec:java -Dexec.mainClass="SimpleApp"' % 
+               (MAVEN_CMD, RELEASE_REPOSITORY, RELEASE_VERSION))
+ret = run_cmd(mvn_exec_cmd, exit_on_failure=False)
+test(ret == 0, "maven application")
+os.chdir(original_dir)
+
+# Binary artifact tests
 if os.path.exists(WORK_DIR):
   print "Working directory '%s' already exists" % WORK_DIR
   sys.exit(-1)

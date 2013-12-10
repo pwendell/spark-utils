@@ -1,0 +1,38 @@
+<project>
+  <groupId>edu.berkeley</groupId>
+  <artifactId>simple-project</artifactId>
+  <modelVersion>4.0.0</modelVersion>
+  <name>Simple Project</name>
+  <packaging>jar</packaging>
+  <version>1.0</version>
+  <repositories>
+    <repository>
+      <id>Spray.cc repository</id>
+      <url>http://repo.spray.cc</url>
+    </repository>
+    <repository>
+      <id>Akka repository</id>
+      <url>http://repo.akka.io/releases</url>
+    </repository>
+    <repository>
+      <id>Spark Staging Repo</id>
+      <url>${spark.release.repository}</url>
+    </repository>
+  </repositories>
+  <dependencies>
+    <dependency> <!-- Spark dependency -->
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_2.9.3</artifactId>
+      <version>${spark.version}</version>
+    </dependency>
+  </dependencies>
+  <!-- Makes sure we get a fairly recent compiler plugin. -->
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>
