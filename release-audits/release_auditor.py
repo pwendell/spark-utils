@@ -71,7 +71,7 @@ modules = ["spark-core", "spark-bagel", "spark-mllib", "spark-streaming",
            "spark-repl"]
 modules = map(lambda m: "%s_%s" % (m, SCALA_VERSION), modules)
 
-os.chdir("sbt_build")
+os.chdir("blank_sbt_build")
 
 # Check for directories that might interfere with tests
 local_ivy_spark = "~/.ivy2/local/org/apache/spark"
@@ -93,7 +93,7 @@ for module in modules:
   test(ret == 0, "sbt build against '%s' module" % module) 
 
 os.chdir(original_dir)
-os.chdir("maven_build")
+os.chdir("blank_maven_build")
 for module in modules:
   cmd = ('%s --update-snapshots -Dspark.release.repository="%s" -Dspark.version="%s" '
       '-Dspark.module="%s" clean compile' % 
