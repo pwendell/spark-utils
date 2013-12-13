@@ -4,6 +4,17 @@ NEW_PACKAGE_NAME=com.google.protobuf_spark
 NEW_PACKAGE_PATH=com/google/protobuf_spark
 
 set -e
+
+if [ ! -d "$SCRATCH_DIR" ]; then
+  echo "Scratch directory $SCRATCH_DIR does not exist"
+  exit -1
+fi
+
+if [ "$(ls -A $SCRATCH_DIR)" ]; then
+  echo "Scratch directory $SCRATCH_DIR is not empty"
+  exit -1
+fi
+
 pushd $SCRATCH_DIR
 
 # Download and shade protobuf
