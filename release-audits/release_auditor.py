@@ -11,9 +11,9 @@ import sys
 import time
 import urllib2
 
-RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.1-incubating-rc1/"
+RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.1-incubating-rc4/"
 RELEASE_KEY = "9E4FE3AF"
-RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-034/"
+RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-040/"
 RELEASE_VERSION = "0.8.1-incubating"
 SCALA_VERSION = "2.9.3"
 LOG_FILE_NAME = "spark_audit_%s" % time.strftime("%h_%m_%Y_%I_%M_%S")
