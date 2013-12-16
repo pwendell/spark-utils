@@ -5,8 +5,6 @@
 SCRATCH_DIR=/tmp/proto-akka # Should exist and be empty
 VERSION_STRING=2.2.3-shaded-protobuf
 
-# TODO: Java 1.5 and other things in pom
-
 set -e
 
 if [ ! -d "$SCRATCH_DIR" ]; then
@@ -31,7 +29,7 @@ sbt akka-slf4j/package && sbt akka-slf4j/doc && sbt akka-slf4j/make-pom
 sbt akka-zeromq/package && sbt akka-zeromq/doc && sbt akka-zeromq/make-pom
 
 for package in actor remote slf4j zeromq; do
-  prefix=akka-$package-$VERSION_STRING
+  prefix=akka-${package}_2.10-$VERSION_STRING
   pushd akka-$package
   package_dir=$OUT_DIR/akka-$package
   mkdir $package_dir
