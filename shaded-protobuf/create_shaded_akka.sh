@@ -27,8 +27,9 @@ sbt akka-actor/package && sbt akka-actor/doc && sbt akka-actor/make-pom
 sbt akka-remote/package && sbt akka-remote/doc && sbt akka-remote/make-pom
 sbt akka-slf4j/package && sbt akka-slf4j/doc && sbt akka-slf4j/make-pom
 sbt akka-zeromq/package && sbt akka-zeromq/doc && sbt akka-zeromq/make-pom
+sbt akka-testkit/package && sbt akka-testkit/doc && sbt akka-testkit/make-pom
 
-for package in actor remote slf4j zeromq; do
+for package in actor remote slf4j zeromq testkit; do
   prefix=akka-${package}_2.10-$VERSION_STRING
   pushd akka-$package
   package_dir=$OUT_DIR/akka-$package
