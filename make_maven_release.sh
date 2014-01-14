@@ -4,8 +4,8 @@
 
 GIT_USERNAME=pwendell
 GIT_PASSWORD=XXX
-GIT_TAG=v0.8.1-incubating
-GIT_BRANCH=branch-0.8
+GIT_TAG=v0.9.0-incubating
+GIT_BRANCH=branch-0.9
 
 git clone https://git-wip-us.apache.org/repos/asf/incubator-spark.git -b $GIT_BRANCH
 cd incubator-spark
@@ -13,14 +13,14 @@ export MAVEN_OPTS="-Xmx3g -XX:MaxPermSize=1g -XX:ReservedCodeCacheSize=1g"
 
 mvn -Phadoop2-yarn -Prepl-bin release:clean
 
-mvn -DskipTests -Dmaven.test.skip=true \
-  -Darguments='-DskipTests=true' -Darguments='-Dmaven.test.skip=true' \
+mvn -DskipTests -Darguments='-DskipTests=true -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0' \
   -Dusername=$GIT_USERNAME -Dpassword=$GIT_PASSWORD \
-  -Phadoop2-yarn -Prepl-bin \
+  -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 \
+  -Pyarn -Prepl-bin \
   -Dtag=$GIT_TAG -DautoVersionSubmodules=true \
   --batch-mode release:prepare
 
-mvn -DskipTests -Dmaven.test.skip=true \
-  -Darguments='-DskipTests=true' -Darguments='-Dmaven.test.skip=true' \
-  -Phadoop2-yarn -Prepl-bin \
+mvn -DskipTests -Darguments='-DskipTests=true -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0' \
+  -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 \
+  -Pyarn -Prepl-bin \
   release:perform
