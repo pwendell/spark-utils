@@ -10,7 +10,7 @@
   #  releases
 
 RELEASE_TAG=fba8738
-RELEASE_VERSION=0.8.1-incubating
+RELEASE_VERSION=0.9.0-incubating
 RC_NAME=rc1
 USER_NAME=pwendell # user with account at people.apache.org
 

@@ -11,16 +11,16 @@ git clone https://git-wip-us.apache.org/repos/asf/incubator-spark.git -b $GIT_BR
 cd incubator-spark
 export MAVEN_OPTS="-Xmx3g -XX:MaxPermSize=1g -XX:ReservedCodeCacheSize=1g"
 
-mvn -Phadoop2-yarn -Prepl-bin release:clean
+mvn -Pyarn release:clean
 
 mvn -DskipTests -Darguments='-DskipTests=true -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0' \
   -Dusername=$GIT_USERNAME -Dpassword=$GIT_PASSWORD \
   -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 \
-  -Pyarn -Prepl-bin \
+  -Pyarn \
   -Dtag=$GIT_TAG -DautoVersionSubmodules=true \
   --batch-mode release:prepare
 
 mvn -DskipTests -Darguments='-DskipTests=true -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0' \
   -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 \
-  -Pyarn -Prepl-bin \
+  -Pyarn \
   release:perform
