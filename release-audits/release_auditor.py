@@ -101,15 +101,12 @@ for module in modules:
   test(ret == 0, "sbt build against '%s' module" % module) 
 os.chdir(original_dir)
 
-os.chdir("sbt_app_core")
-ret = run_cmd("sbt/sbt clean run", exit_on_failure=False)
-test(ret == 0, "sbt application (core)")
-os.chdir(original_dir)
-
-os.chdir("sbt_app_graphx")
-ret = run_cmd("sbt/sbt clean run", exit_on_failure=False)
-test(ret == 0, "sbt application (graphx)")
-os.chdir(original_dir)
+# SBT application tests
+for app in ["sbt_app_core", "sbt_app_graphx", "sbt_app_streaming"]:
+  os.chdir(app)
+  ret = run_cmd("sbt/sbt clean run", exit_on_failure=False)
+  test(ret == 0, "sbt application (%s)" % app)
+  os.chdir(original_dir)
 
 # Maven build tests
 os.chdir("blank_maven_build")
