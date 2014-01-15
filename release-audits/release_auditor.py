@@ -101,7 +101,7 @@ for module in modules:
   test(ret == 0, "sbt build against '%s' module" % module) 
 os.chdir(original_dir)
 
-os.chdir("sbt_app_build")
+os.chdir("sbt_app_core")
 ret = run_cmd("sbt/sbt clean run", exit_on_failure=False)
 test(ret == 0, "sbt application")
 os.chdir(original_dir)
@@ -116,7 +116,7 @@ for module in modules:
   test(ret == 0, "maven build against '%s' module" % module)
 os.chdir(original_dir)
 
-os.chdir("maven_app_build")
+os.chdir("maven_app_core")
 mvn_exec_cmd = ('%s --update-snapshots -Dspark.release.repository="%s" -Dspark.version="%s" '
                 '-Dscala.binary.version="%s" clean compile '
                 'exec:java -Dexec.mainClass="SimpleApp"' % 
