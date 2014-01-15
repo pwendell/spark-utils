@@ -103,7 +103,12 @@ os.chdir(original_dir)
 
 os.chdir("sbt_app_core")
 ret = run_cmd("sbt/sbt clean run", exit_on_failure=False)
-test(ret == 0, "sbt application")
+test(ret == 0, "sbt application (core)")
+os.chdir(original_dir)
+
+os.chdir("sbt_app_graphx")
+ret = run_cmd("sbt/sbt clean run", exit_on_failure=False)
+test(ret == 0, "sbt application (graphx)")
 os.chdir(original_dir)
 
 # Maven build tests
@@ -122,7 +127,7 @@ mvn_exec_cmd = ('%s --update-snapshots -Dspark.release.repository="%s" -Dspark.v
                 'exec:java -Dexec.mainClass="SimpleApp"' % 
                (MAVEN_CMD, RELEASE_REPOSITORY, RELEASE_VERSION, SCALA_BINARY_VERSION))
 ret = run_cmd(mvn_exec_cmd, exit_on_failure=False)
-test(ret == 0, "maven application")
+test(ret == 0, "maven application (core)")
 os.chdir(original_dir)
 
 # Binary artifact tests
