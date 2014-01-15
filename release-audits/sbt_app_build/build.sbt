@@ -2,7 +2,7 @@ name := "Simple Project"
 
 version := "1.0"
 
-scalaVersion := "2.9.3"
+scalaVersion := System.getenv.get("SCALA_VERSION")
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % System.getenv.get("SPARK_VERSION")
 

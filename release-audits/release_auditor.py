@@ -1,4 +1,4 @@
-# Audits a Spark release published to an Apache home directory.
+# Audits binary and maven artifacts for a Spark release.
 # Requires GPG and Maven.
 # usage:
 #   python release_auditor.py
@@ -11,11 +11,15 @@ import sys
 import time
 import urllib2
 
+## Fill in release details here:
 RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.1-incubating-rc4/"
 RELEASE_KEY = "9E4FE3AF"
-RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-040/"
-RELEASE_VERSION = "0.8.1-incubating"
-SCALA_VERSION = "2.9.3"
+RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-1000/"
+RELEASE_VERSION = "0.9.0-incubating"
+SCALA_VERSION = "2.10.3"
+SCALA_BINARY_VERSION = "2.10"
+##
+
 LOG_FILE_NAME = "spark_audit_%s" % time.strftime("%h_%m_%Y_%I_%M_%S")
 LOG_FILE = open(LOG_FILE_NAME, 'w')
 WORK_DIR = "/tmp/audit_%s" % int(time.time()) 
@@ -67,9 +71,13 @@ def get_url(url):
 
 original_dir = os.getcwd()
 
-modules = ["spark-core", "spark-bagel", "spark-mllib", "spark-streaming",
-           "spark-repl"]
-modules = map(lambda m: "%s_%s" % (m, SCALA_VERSION), modules)
+# For each of these modules, we'll test an 'empty' application in sbt and 
+# maven that links against them. This will catch issues with messed up
+# dependencies within those projects.
+modules = ["spark-core", "spark-bagel", "spark-mllib", "spark-streaming", "spark-repl", 
+           "spark-graphx", "spark-streaming-flume", "spark-streaming-kafka", 
+           "spark-streaming-mqtt", "spark-streaming-twitter", "spark-streaming-zeromq"]
+modules = map(lambda m: "%s_%s" % (m, SCALA_BINARY_VERSION), modules)
 
 # Check for directories that might interfere with tests
 local_ivy_spark = "~/.ivy2/local/org.apache.spark"
@@ -85,6 +93,7 @@ map(ensure_path_not_present, [local_ivy_spark, cache_ivy_spark, local_maven_kafk
 # SBT build tests 
 os.chdir("blank_sbt_build")
 os.environ["SPARK_VERSION"] = RELEASE_VERSION
+os.environ["SCALA_VERSION"] = SCALA_VERSION
 os.environ["SPARK_RELEASE_REPOSITORY"] = RELEASE_REPOSITORY
 for module in modules:
   os.environ["SPARK_MODULE"] = module
@@ -109,8 +118,9 @@ os.chdir(original_dir)
 
 os.chdir("maven_app_build")
 mvn_exec_cmd = ('%s --update-snapshots -Dspark.release.repository="%s" -Dspark.version="%s" '
-                'clean compile exec:java -Dexec.mainClass="SimpleApp"' % 
-               (MAVEN_CMD, RELEASE_REPOSITORY, RELEASE_VERSION))
+                '-Dscala.binary.version="%s" clean compile '
+                'exec:java -Dexec.mainClass="SimpleApp"' % 
+               (MAVEN_CMD, RELEASE_REPOSITORY, RELEASE_VERSION, SCALA_BINARY_VERSION))
 ret = run_cmd(mvn_exec_cmd, exit_on_failure=False)
 test(ret == 0, "maven application")
 os.chdir(original_dir)
