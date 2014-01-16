@@ -8,7 +8,7 @@ import org.apache.spark.rdd.RDD
 object GraphXApp {
   def main(args: Array[String]) {
     val sc = new SparkContext("local", "Simple GraphX App")
-    val users: RDD[(VertexID, (String, String))] =
+    val users: RDD[(VertexId, (String, String))] =
       sc.parallelize(Array((3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
                            (5L, ("franklin", "prof")), (2L, ("istoica", "prof")),
                            (4L, ("peter", "student"))))
@@ -20,12 +20,11 @@ object GraphXApp {
     val graph = Graph(users, relationships, defaultUser)
     // Notice that there is a user 0 (for which we have no information) connected to users
     // 4 (peter) and 5 (franklin).
-    val triplets = graph.triplets.collect
-    if (!triplets.exists(e => e.srcAttr._1 == "peter" && e.dstAttr._1 == "John Doe")) {
+    val triplets = graph.triplets.map(e => (e.srcAttr._1, e.dstAttr._1)).collect
+    if (!triplets.exists(_ == ("peter", "John Doe"))) {
       println("Failed to run GraphX")
       System.exit(-1)
     }
     println("Test succeeded")
   }
 }
-
