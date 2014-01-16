@@ -14,7 +14,7 @@ import urllib2
 ## Fill in release details here:
 RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.8.1-incubating-rc4/"
 RELEASE_KEY = "9E4FE3AF"
-RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-1000/"
+RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-1001/"
 RELEASE_VERSION = "0.9.0-incubating"
 SCALA_VERSION = "2.10.3"
 SCALA_BINARY_VERSION = "2.10"

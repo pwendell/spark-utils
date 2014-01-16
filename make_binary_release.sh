@@ -64,7 +64,7 @@ rm -rf spark-$RELEASE_VERSION-bin-cdh4
 cp -r incubator-spark spark-$RELEASE_VERSION-bin-hadoop2
 cd spark-$RELEASE_VERSION-bin-hadoop2
 export MAVEN_OPTS="-Xmx3g -XX:MaxPermSize=1g -XX:ReservedCodeCacheSize=1g"
-mvn -Pnew-yarn -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 -DskipTests package
+mvn -Pyarn -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 -DskipTests package
 find . -name test-classes -type d | xargs rm -rf
 find . -name classes -type d | xargs rm -rf
 cd ..
