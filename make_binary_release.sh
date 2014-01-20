@@ -9,9 +9,9 @@
   # Have this call the maven release plugin to actually create
   #  releases
 
-RELEASE_TAG=fba8738
+RELEASE_TAG=00c847af
 RELEASE_VERSION=0.9.0-incubating
-RC_NAME=rc1
+RC_NAME=rc2
 USER_NAME=pwendell # user with account at people.apache.org
 
 set -e
