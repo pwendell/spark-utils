@@ -12,6 +12,7 @@
 
 GIT_USERNAME=pwendell
 GIT_PASSWORD=XXX
+GPG_PASSPHRASE=XXX
 GIT_BRANCH=branch-0.9
 RELEASE_VERSION=0.9.0-incubating
 RC_NAME=rc2
@@ -27,14 +28,16 @@ export MAVEN_OPTS="-Xmx3g -XX:MaxPermSize=1g -XX:ReservedCodeCacheSize=1g"
 
 mvn -Pyarn release:clean
 
-mvn -DskipTests -Darguments='-DskipTests=true -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0' \
+mvn -DskipTests \
+  -Darguments="-DskipTests=true -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 -Dgpg.passphrase=${GPG_PASSPHRASE}" \
   -Dusername=$GIT_USERNAME -Dpassword=$GIT_PASSWORD \
   -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 \
   -Pyarn \
   -Dtag=$GIT_TAG -DautoVersionSubmodules=true \
   --batch-mode release:prepare
 
-mvn -DskipTests -Darguments='-DskipTests=true -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0' \
+mvn -DskipTests \
+  -Darguments="-DskipTests=true -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 -Dgpg.passphrase=${GPG_PASSPHRASE}" \
   -Dhadoop.version=2.2.0 -Dyarn.version=2.2.0 \
   -Pyarn \
   release:perform
