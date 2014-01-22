@@ -45,10 +45,15 @@ def continue_maybe(prompt):
   if result.lower() != "y":
     fail("Okay, exiting")
 
+branches = get_json("%s/branches" % GIT_API_BASE)
+branch_names = filter(lambda x: x.startswith("branch-"), [x['name'] for x in branches])
+# Assumes branch names can be sorted lexicographically
+latest_branch = sorted(branch_names, reverse=True)[0]
+
 pr_num = raw_input("Which pull request would you like to merge? (e.g. 34): ")
 pr = get_json("%s/pulls/%s" % (GIT_API_BASE, pr_num))
 
-if  pr["merged"] == True:
+if pr["merged"] == True:
   fail("Pull request %s has already been merged" % pr_num)
 
 if bool(pr["mergeable"]) == False:
@@ -89,9 +94,29 @@ continue_maybe("Merge complete (local ref %s). Push to %s?" % (
 
 run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, target_branch_name, target_ref))
 
-merge_hash = run_cmd("git rev-parse %s" % target_branch_name)
+merge_hash = run_cmd("git rev-parse %s" % target_branch_name)[:8]
 run_cmd("git checkout @{-1}")
 run_cmd("git branch -D %s" % pr_branch_name)
 run_cmd("git branch -D %s" % target_branch_name)
 print("Pull request #%s merged!" % pr_num)
-print("Merge hash: %s" % merge_hash[:8])
+print("Merge hash: %s" % merge_hash)
+
+continue_maybe("Would you like to pick %s into another branch?" % merge_hash)
+pick_ref = raw_input("Enter a branch name [%s]: " % latest_branch)
+if pick_ref == "":
+  pick_ref = latest_branch
+
+pick_branch_name = "PICK_PR_%s_%s" % (pr_num, pick_ref.upper())
+
+run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, pick_ref, pick_branch_name))
+run_cmd("git checkout %s" % pick_branch_name)
+run_cmd("git cherry-pick -sx -m 1 %s" % merge_hash)
+continue_maybe("Pick complete (local ref %s). Push to %s?" % (
+  pick_branch_name, PUSH_REMOTE_NAME))
+run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, pick_branch_name, pick_ref))
+
+pick_hash = run_cmd("git rev-parse %s" % pick_branch_name)[:8]
+run_cmd("git checkout @{-1}")
+run_cmd("git branch -D %s" % pick_branch_name)
+print("Pull request #%s picked into %s!" % (pr_num, pick_ref))
+print("Pick hash: %s" % pick_hash)
