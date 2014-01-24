@@ -45,7 +45,7 @@ mvn -DskipTests \
 rm -rf incubator-spark
 git clone https://git-wip-us.apache.org/repos/asf/incubator-spark.git
 cd incubator-spark
-git checkout --force $RELEASE_TAG
+git checkout --force $GIT_TAG
 rm .gitignore
 rm -rf .git
 cd ..
