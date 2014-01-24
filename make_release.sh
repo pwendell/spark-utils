@@ -22,6 +22,8 @@ set -e
 
 GIT_TAG=v$RELEASE_VERSION
 
+# Artifact publishing
+
 git clone https://git-wip-us.apache.org/repos/asf/incubator-spark.git -b $GIT_BRANCH
 cd incubator-spark
 export MAVEN_OPTS="-Xmx3g -XX:MaxPermSize=1g -XX:ReservedCodeCacheSize=1g"
@@ -43,19 +45,25 @@ mvn -DskipTests \
   release:perform
 
 rm -rf incubator-spark
+
+# Source and binary tarballs
 git clone https://git-wip-us.apache.org/repos/asf/incubator-spark.git
 cd incubator-spark
 git checkout --force $GIT_TAG
+release_hash=`git rev-parse HEAD`
+
 rm .gitignore
 rm -rf .git
 cd ..
 
-# Source release
 cp -r incubator-spark spark-$RELEASE_VERSION
 tar cvzf spark-$RELEASE_VERSION.tgz spark-$RELEASE_VERSION
-gpg --armour --output spark-$RELEASE_VERSION.tgz.asc --detach-sig spark-$RELEASE_VERSION.tgz
-gpg --print-md MD5 spark-$RELEASE_VERSION.tgz > spark-$RELEASE_VERSION.tgz.md5
-gpg --print-md SHA512 spark-$RELEASE_VERSION.tgz > spark-$RELEASE_VERSION.tgz.sha
+echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --armour --output spark-$RELEASE_VERSION.tgz.asc \
+  --detach-sig spark-$RELEASE_VERSION.tgz
+echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --print-md MD5 spark-$RELEASE_VERSION.tgz > \
+  spark-$RELEASE_VERSION.tgz.md5
+echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --print-md SHA512 spark-$RELEASE_VERSION.tgz > \
+  spark-$RELEASE_VERSION.tgz.sha
 rm -rf spark-$RELEASE_VERSION
 
 make_binary_release() {
@@ -70,11 +78,14 @@ make_binary_release() {
   find . -name classes -type d | xargs rm -rf
   cd ..
   tar cvzf spark-$RELEASE_VERSION-bin-$NAME.tgz spark-$RELEASE_VERSION-bin-$NAME
-  gpg --armour --output spark-$RELEASE_VERSION-bin-$NAME.tgz.asc \
+  echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --armour \
+    --output spark-$RELEASE_VERSION-bin-$NAME.tgz.asc \
     --detach-sig spark-$RELEASE_VERSION-bin-$NAME.tgz
-  gpg --print-md MD5 spark-$RELEASE_VERSION-bin-$NAME.tgz > \
+  echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --print-md \
+    MD5 spark-$RELEASE_VERSION-bin-$NAME.tgz > \
     spark-$RELEASE_VERSION-bin-$NAME.tgz.md5
-  gpg --print-md SHA512 spark-$RELEASE_VERSION-bin-$NAME.tgz > \
+  echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --print-md \
+    SHA512 spark-$RELEASE_VERSION-bin-$NAME.tgz > \
     spark-$RELEASE_VERSION-bin-$NAME.tgz.sha
   rm -rf spark-$RELEASE_VERSION-bin-hadoop1
 }
@@ -86,8 +97,9 @@ make_binary_release "hadoop2"  "-Pyarn -Dhadoop.version=2.2.0 -Dyarn.version=2.2
 # Copy data
 ssh $USER_NAME@people.apache.org \
   mkdir /home/$USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME
+rc_folder=spark-$RELEASE_VERSION-$RC_NAME
 scp spark* \
-  $USER_NAME@people.apache.org:/home/$USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME/
+  $USER_NAME@people.apache.org:/home/$USER_NAME/public_html/$rc_folder/
 
 # Docs
 cd incubator-spark
@@ -95,5 +107,12 @@ cd docs
 jekyll build
 ssh $USER_NAME@people.apache.org \
   mkdir /home/$USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME-docs
+rc_docs_folder=${rc_folder}-docs
 scp -r _site/* \
-  $USER_NAME@people.apache.org:/home/$USER_NAME/public_html/spark-$RELEASE_VERSION-$RC_NAME-docs/
+  $USER_NAME@people.apache.org:/home/$USER_NAME/public_html/$rc_docs_folder/
+
+echo "Release $RELEASE_VERSION completed:"
+echo "Git tag:\t $GIT_TAG"
+echo "Release commit:\t $release_hash"
+echo "Binary location:\t http://people.apache.org/~$USER_NAME/$rc_folder"
+echo "Doc location:\t http://people.apache.org/~$USER_NAME/$rc_docs_folder"
