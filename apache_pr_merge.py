@@ -80,14 +80,31 @@ run_cmd("git fetch %s pull/%s/head:%s" % (PR_REMOTE_NAME, pr_num, pr_branch_name
 run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, target_ref, target_branch_name))
 run_cmd("git checkout %s" % target_branch_name)
 
+run_cmd(['git', 'merge', pr_branch_name, '--squash'])
+
+commit_authors = run_cmd(['git', 'log', 'HEAD..%s' % pr_branch_name, 
+  '--pretty=format:%an <%ae>']).split("\n")
+distinct_authors = sorted(set(commit_authors), key=lambda x: commit_authors.count(x), reverse=True)
+primary_author = distinct_authors[0]
+commits = run_cmd(['git', 'log', 'HEAD..%s' % pr_branch_name]).split("\n\n")
+
 merge_message = "Merge pull request #%s from %s\n\n%s\n\n%s" % (pr_num, pr_repo_desc, title, body)
 # This is a bit of a hack to get the merge messages with linebreaks to format correctly
 merge_message_parts = merge_message.split("\n\n")
+
 merge_message_flags = []
+
 for p in merge_message_parts:
   merge_message_flags = merge_message_flags + ["-m", p]
 
-run_cmd(['git', 'merge', pr_branch_name, '--no-ff'] + merge_message_flags)
+authors = "\n".join(["Author: %s" % a for a in distinct_authors])
+merge_message_flags = merge_message_flags + ["-m", authors]
+
+merge_message_flags = merge_message_flags + ["-m", "== Merge branch commits =="]
+for c in commits:
+  merge_message_flags = merge_message_flags + ["-m", c]
+
+run_cmd(['git', 'commit', '--author="%s"' % primary_author] + merge_message_flags)
 
 continue_maybe("Merge complete (local ref %s). Push to %s?" % (
   target_branch_name, PUSH_REMOTE_NAME))
