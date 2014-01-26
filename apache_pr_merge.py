@@ -101,22 +101,26 @@ run_cmd("git branch -D %s" % target_branch_name)
 print("Pull request #%s merged!" % pr_num)
 print("Merge hash: %s" % merge_hash)
 
-continue_maybe("Would you like to pick %s into another branch?" % merge_hash)
-pick_ref = raw_input("Enter a branch name [%s]: " % latest_branch)
-if pick_ref == "":
-  pick_ref = latest_branch
+def maybe_cherry_pick():
+  continue_maybe("Would you like to pick %s into another branch?" % merge_hash)
+  pick_ref = raw_input("Enter a branch name [%s]: " % latest_branch)
+  if pick_ref == "":
+    pick_ref = latest_branch
 
-pick_branch_name = "PICK_PR_%s_%s" % (pr_num, pick_ref.upper())
+  pick_branch_name = "PICK_PR_%s_%s" % (pr_num, pick_ref.upper())
 
-run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, pick_ref, pick_branch_name))
-run_cmd("git checkout %s" % pick_branch_name)
-run_cmd("git cherry-pick -sx -m 1 %s" % merge_hash)
-continue_maybe("Pick complete (local ref %s). Push to %s?" % (
-  pick_branch_name, PUSH_REMOTE_NAME))
-run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, pick_branch_name, pick_ref))
+  run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, pick_ref, pick_branch_name))
+  run_cmd("git checkout %s" % pick_branch_name)
+  run_cmd("git cherry-pick -sx -m 1 %s" % merge_hash)
+  continue_maybe("Pick complete (local ref %s). Push to %s?" % (
+    pick_branch_name, PUSH_REMOTE_NAME))
+  run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, pick_branch_name, pick_ref))
 
-pick_hash = run_cmd("git rev-parse %s" % pick_branch_name)[:8]
-run_cmd("git checkout @{-1}")
-run_cmd("git branch -D %s" % pick_branch_name)
-print("Pull request #%s picked into %s!" % (pr_num, pick_ref))
-print("Pick hash: %s" % pick_hash)
+  pick_hash = run_cmd("git rev-parse %s" % pick_branch_name)[:8]
+  run_cmd("git checkout @{-1}")
+  run_cmd("git branch -D %s" % pick_branch_name)
+  print("Pull request #%s picked into %s!" % (pr_num, pick_ref))
+  print("Pick hash: %s" % pick_hash)
+
+while True:
+  maybe_cherry_pick()
