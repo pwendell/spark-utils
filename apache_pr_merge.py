@@ -15,13 +15,17 @@ import tempfile
 import urllib2
 
 # Location of your Spark git development area
-SPARK_HOME =       os.environ.get("SPARK_HOME", "/home/patrick/Documents/spark")
+SPARK_HOME = os.environ.get("SPARK_HOME", "/home/patrick/Documents/spark")
 # Remote name which points to the Gihub site
-PR_REMOTE_NAME =   os.environ.get("PR_REMOTE_NAME", "apache-github")
+PR_REMOTE_NAME = os.environ.get("PR_REMOTE_NAME", "apache-github")
 # Remote name which points to Apache git
 PUSH_REMOTE_NAME = os.environ.get("PUSH_REMOTE_NAME", "apache")
 
 GIT_API_BASE = "https://api.github.com/repos/apache/incubator-spark"
+# Prefix added to temporary branches
+BRANCH_PREFIX = "PR_TOOL"
+
+os.chdir(SPARK_HOME)
 
 def get_json(url):
   try:
@@ -32,6 +36,7 @@ def get_json(url):
 
 def fail(msg):
   print msg
+  clean_up()
   sys.exit(-1)
 
 def run_cmd(cmd):
@@ -44,6 +49,18 @@ def continue_maybe(prompt):
   result = raw_input("\n%s (y/n): " % prompt)
   if result.lower() != "y":
     fail("Okay, exiting")
+
+original_head = run_cmd("git rev-parse HEAD")[:8]
+
+def clean_up():
+  print "Restoring head pointer to %s" % original_head
+  run_cmd("git checkout %s" % original_head)
+
+  branches = run_cmd("git branch").replace(" ", "").split("\n")
+
+  for branch in filter(lambda x: x.startswith(BRANCH_PREFIX), branches):
+    print "Deleting local branch %s" % branch
+    run_cmd("git branch -D %s" % branch)
 
 branches = get_json("%s/branches" % GIT_API_BASE)
 branch_names = filter(lambda x: x.startswith("branch-"), [x['name'] for x in branches])
@@ -72,10 +89,8 @@ print("title\t%s\nsource\t%s\ntarget\t%s\nurl\t%s" % (
   title, pr_repo_desc, target_ref, url))
 continue_maybe("Proceed with merging pull request #%s?" % pr_num)
 
-os.chdir(SPARK_HOME)
-
-pr_branch_name = "MERGE_PR_%s" % pr_num
-target_branch_name = "MERGE_PR_%s_%s" % (pr_num, target_ref.upper())
+pr_branch_name = "%s_MERGE_PR_%s" % (BRANCH_PREFIX, pr_num)
+target_branch_name = "%s_MERGE_PR_%s_%s" % (BRANCH_PREFIX, pr_num, target_ref.upper())
 run_cmd("git fetch %s pull/%s/head:%s" % (PR_REMOTE_NAME, pr_num, pr_branch_name))
 run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, target_ref, target_branch_name))
 run_cmd("git checkout %s" % target_branch_name)
@@ -89,6 +104,7 @@ primary_author = distinct_authors[0]
 commits = run_cmd(['git', 'log', 'HEAD..%s' % pr_branch_name]).split("\n\n")
 
 merge_message = "Merge pull request #%s from %s\n\n%s\n\n%s" % (pr_num, pr_repo_desc, title, body)
+
 # This is a bit of a hack to get the merge messages with linebreaks to format correctly
 merge_message_parts = merge_message.split("\n\n")
 
@@ -96,10 +112,8 @@ merge_message_flags = []
 
 for p in merge_message_parts:
   merge_message_flags = merge_message_flags + ["-m", p]
-
 authors = "\n".join(["Author: %s" % a for a in distinct_authors])
 merge_message_flags = merge_message_flags + ["-m", authors]
-
 merge_message_flags = merge_message_flags + ["-m", "== Merge branch commits =="]
 for c in commits:
   merge_message_flags = merge_message_flags + ["-m", c]
@@ -109,12 +123,15 @@ run_cmd(['git', 'commit', '--author="%s"' % primary_author] + merge_message_flag
 continue_maybe("Merge complete (local ref %s). Push to %s?" % (
   target_branch_name, PUSH_REMOTE_NAME))
 
-run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, target_branch_name, target_ref))
+try:
+  run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, target_branch_name, target_ref))
+except Exception as e:
+  clean_up()
+  fail("Exception while pushing: %s" % e)
+
+clean_up()
 
 merge_hash = run_cmd("git rev-parse %s" % target_branch_name)[:8]
-run_cmd("git checkout @{-1}")
-run_cmd("git branch -D %s" % pr_branch_name)
-run_cmd("git branch -D %s" % target_branch_name)
 print("Pull request #%s merged!" % pr_num)
 print("Merge hash: %s" % merge_hash)
 
@@ -124,18 +141,23 @@ def maybe_cherry_pick():
   if pick_ref == "":
     pick_ref = latest_branch
 
-  pick_branch_name = "PICK_PR_%s_%s" % (pr_num, pick_ref.upper())
+  pick_branch_name = "%s_PICK_PR_%s_%s" % (BRANCH_PREFIX, pr_num, pick_ref.upper())
 
   run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, pick_ref, pick_branch_name))
   run_cmd("git checkout %s" % pick_branch_name)
   run_cmd("git cherry-pick -sx -m 1 %s" % merge_hash)
   continue_maybe("Pick complete (local ref %s). Push to %s?" % (
     pick_branch_name, PUSH_REMOTE_NAME))
-  run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, pick_branch_name, pick_ref))
+
+  try:
+    run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, pick_branch_name, pick_ref))
+  except Exception as e:
+    clean_up()
+    fail("Exception while pushing: %s" % e)
 
   pick_hash = run_cmd("git rev-parse %s" % pick_branch_name)[:8]
-  run_cmd("git checkout @{-1}")
-  run_cmd("git branch -D %s" % pick_branch_name)
+  clean_up()
+
   print("Pull request #%s picked into %s!" % (pr_num, pick_ref))
   print("Pick hash: %s" % pick_hash)
 
