@@ -129,9 +129,10 @@ except Exception as e:
   clean_up()
   fail("Exception while pushing: %s" % e)
 
+merge_hash = run_cmd("git rev-parse %s" % target_branch_name)[:8]
+
 clean_up()
 
-merge_hash = run_cmd("git rev-parse %s" % target_branch_name)[:8]
 print("Pull request #%s merged!" % pr_num)
 print("Merge hash: %s" % merge_hash)
 
@@ -145,7 +146,7 @@ def maybe_cherry_pick():
 
   run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, pick_ref, pick_branch_name))
   run_cmd("git checkout %s" % pick_branch_name)
-  run_cmd("git cherry-pick -sx -m 1 %s" % merge_hash)
+  run_cmd("git cherry-pick -sx %s" % merge_hash)
   continue_maybe("Pick complete (local ref %s). Push to %s?" % (
     pick_branch_name, PUSH_REMOTE_NAME))
 
