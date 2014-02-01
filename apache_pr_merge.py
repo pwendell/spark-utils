@@ -103,7 +103,8 @@ distinct_authors = sorted(set(commit_authors), key=lambda x: commit_authors.coun
 primary_author = distinct_authors[0]
 commits = run_cmd(['git', 'log', 'HEAD..%s' % pr_branch_name]).split("\n\n")
 
-merge_message = "Merge pull request #%s from %s\n\n%s\n\n%s" % (pr_num, pr_repo_desc, title, body)
+merge_message = "Merge pull request #%s from %s. Closes #%s.\n\n%s\n\n%s" % (
+  pr_num, pr_repo_desc, pr_num, title, body)
 
 # This is a bit of a hack to get the merge messages with linebreaks to format correctly
 merge_message_parts = merge_message.split("\n\n")
