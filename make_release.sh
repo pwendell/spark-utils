@@ -87,7 +87,7 @@ make_binary_release() {
   echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --print-md \
     SHA512 spark-$RELEASE_VERSION-bin-$NAME.tgz > \
     spark-$RELEASE_VERSION-bin-$NAME.tgz.sha
-  rm -rf spark-$RELEASE_VERSION-bin-hadoop1
+  rm -rf spark-$RELEASE_VERSION-bin-$NAME
 }
 
 make_binary_release "hadoop1"  "-Dhadoop.version=1.0.4"

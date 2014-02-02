@@ -12,9 +12,9 @@ import time
 import urllib2
 
 ## Fill in release details here:
-RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.9.0-incubating-rc3/"
+RELEASE_URL = "http://people.apache.org/~pwendell/spark-0.9.0-incubating-rc5/"
 RELEASE_KEY = "9E4FE3AF"
-RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-1004/"
+RELEASE_REPOSITORY = "https://repository.apache.org/content/repositories/orgapachespark-1006/"
 RELEASE_VERSION = "0.9.0-incubating"
 SCALA_VERSION = "2.10.3"
 SCALA_BINARY_VERSION = "2.10"
