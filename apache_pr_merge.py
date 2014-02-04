@@ -62,92 +62,67 @@ def clean_up():
     print "Deleting local branch %s" % branch
     run_cmd("git branch -D %s" % branch)
 
-branches = get_json("%s/branches" % GIT_API_BASE)
-branch_names = filter(lambda x: x.startswith("branch-"), [x['name'] for x in branches])
-# Assumes branch names can be sorted lexicographically
-latest_branch = sorted(branch_names, reverse=True)[0]
+# merge the requested PR and return the merge hash
+def merge_pr(pr_num, target_ref):
+  pr_branch_name = "%s_MERGE_PR_%s" % (BRANCH_PREFIX, pr_num)
+  target_branch_name = "%s_MERGE_PR_%s_%s" % (BRANCH_PREFIX, pr_num, target_ref.upper())
+  run_cmd("git fetch %s pull/%s/head:%s" % (PR_REMOTE_NAME, pr_num, pr_branch_name))
+  run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, target_ref, target_branch_name))
+  run_cmd("git checkout %s" % target_branch_name)
+  
+  run_cmd(['git', 'merge', pr_branch_name, '--squash'])
 
-pr_num = raw_input("Which pull request would you like to merge? (e.g. 34): ")
-pr = get_json("%s/pulls/%s" % (GIT_API_BASE, pr_num))
+  commit_authors = run_cmd(['git', 'log', 'HEAD..%s' % pr_branch_name, 
+    '--pretty=format:%an <%ae>']).split("\n")
+  distinct_authors = sorted(set(commit_authors), key=lambda x: commit_authors.count(x), reverse=True)
+  primary_author = distinct_authors[0]
+  commits = run_cmd(['git', 'log', 'HEAD..%s' % pr_branch_name]).split("\n\n")
 
-if pr["merged"] == True:
-  fail("Pull request %s has already been merged" % pr_num)
+  merge_message = "Merge pull request #%s from %s. Closes #%s.\n\n%s\n\n%s" % (
+    pr_num, pr_repo_desc, pr_num, title, body)
+  merge_message_parts = merge_message.split("\n\n")
+  merge_message_flags = []
 
-if bool(pr["mergeable"]) == False:
-  fail("Pull request %s is not mergeable in its current form" % pr_num)
+  for p in merge_message_parts:
+    merge_message_flags = merge_message_flags + ["-m", p]
+  authors = "\n".join(["Author: %s" % a for a in distinct_authors])
+  merge_message_flags = merge_message_flags + ["-m", authors]
+  merge_message_flags = merge_message_flags + ["-m", "== Merge branch commits =="]
+  for c in commits:
+    merge_message_flags = merge_message_flags + ["-m", c]
 
-url = pr["url"]
-title = pr["title"]
-body = pr["body"]
-target_ref = pr["base"]["ref"]
-user_login = pr["user"]["login"]
-base_ref = pr["head"]["ref"]
-pr_repo_desc = "%s/%s" % (user_login, base_ref)
+  run_cmd(['git', 'commit', '--author="%s"' % primary_author] + merge_message_flags)
 
-print ("\n=== Pull Request #%s ===" % pr_num)
-print("title\t%s\nsource\t%s\ntarget\t%s\nurl\t%s" % (
-  title, pr_repo_desc, target_ref, url))
-continue_maybe("Proceed with merging pull request #%s?" % pr_num)
+  continue_maybe("Merge complete (local ref %s). Push to %s?" % (
+    target_branch_name, PUSH_REMOTE_NAME))
 
-pr_branch_name = "%s_MERGE_PR_%s" % (BRANCH_PREFIX, pr_num)
-target_branch_name = "%s_MERGE_PR_%s_%s" % (BRANCH_PREFIX, pr_num, target_ref.upper())
-run_cmd("git fetch %s pull/%s/head:%s" % (PR_REMOTE_NAME, pr_num, pr_branch_name))
-run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, target_ref, target_branch_name))
-run_cmd("git checkout %s" % target_branch_name)
-
-run_cmd(['git', 'merge', pr_branch_name, '--squash'])
-
-commit_authors = run_cmd(['git', 'log', 'HEAD..%s' % pr_branch_name, 
-  '--pretty=format:%an <%ae>']).split("\n")
-distinct_authors = sorted(set(commit_authors), key=lambda x: commit_authors.count(x), reverse=True)
-primary_author = distinct_authors[0]
-commits = run_cmd(['git', 'log', 'HEAD..%s' % pr_branch_name]).split("\n\n")
-
-merge_message = "Merge pull request #%s from %s. Closes #%s.\n\n%s\n\n%s" % (
-  pr_num, pr_repo_desc, pr_num, title, body)
-
-# This is a bit of a hack to get the merge messages with linebreaks to format correctly
-merge_message_parts = merge_message.split("\n\n")
-
-merge_message_flags = []
-
-for p in merge_message_parts:
-  merge_message_flags = merge_message_flags + ["-m", p]
-authors = "\n".join(["Author: %s" % a for a in distinct_authors])
-merge_message_flags = merge_message_flags + ["-m", authors]
-merge_message_flags = merge_message_flags + ["-m", "== Merge branch commits =="]
-for c in commits:
-  merge_message_flags = merge_message_flags + ["-m", c]
-
-run_cmd(['git', 'commit', '--author="%s"' % primary_author] + merge_message_flags)
-
-continue_maybe("Merge complete (local ref %s). Push to %s?" % (
-  target_branch_name, PUSH_REMOTE_NAME))
-
-try:
-  run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, target_branch_name, target_ref))
-except Exception as e:
+  try:
+    run_cmd('git push %s %s:%s' % (PUSH_REMOTE_NAME, target_branch_name, target_ref))
+  except Exception as e:
+    clean_up()
+    fail("Exception while pushing: %s" % e)
+  
+  merge_hash = run_cmd("git rev-parse %s" % target_branch_name)[:8]
   clean_up()
-  fail("Exception while pushing: %s" % e)
+  print("Pull request #%s merged!" % pr_num)
+  print("Merge hash: %s" % merge_hash)
+  return merge_hash
 
-merge_hash = run_cmd("git rev-parse %s" % target_branch_name)[:8]
 
-clean_up()
-
-print("Pull request #%s merged!" % pr_num)
-print("Merge hash: %s" % merge_hash)
-
-def maybe_cherry_pick():
+def maybe_cherry_pick(pr_num, merge_hash, default_branch):
   continue_maybe("Would you like to pick %s into another branch?" % merge_hash)
-  pick_ref = raw_input("Enter a branch name [%s]: " % latest_branch)
+  pick_ref = raw_input("Enter a branch name [%s]: " % default_branch)
   if pick_ref == "":
-    pick_ref = latest_branch
+    pick_ref = default_branch
 
   pick_branch_name = "%s_PICK_PR_%s_%s" % (BRANCH_PREFIX, pr_num, pick_ref.upper())
 
   run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, pick_ref, pick_branch_name))
   run_cmd("git checkout %s" % pick_branch_name)
-  run_cmd("git cherry-pick -sx %s" % merge_hash)
+  #run_cmd("git cherry-pick -sx %s" % merge_hash)
+  
+  run_cmd("git cherry-pick -sx -m 1 %s" % merge_hash) # For older merge style
+
   continue_maybe("Pick complete (local ref %s). Push to %s?" % (
     pick_branch_name, PUSH_REMOTE_NAME))
 
@@ -163,5 +138,45 @@ def maybe_cherry_pick():
   print("Pull request #%s picked into %s!" % (pr_num, pick_ref))
   print("Pick hash: %s" % pick_hash)
 
+branches = get_json("%s/branches" % GIT_API_BASE)
+branch_names = filter(lambda x: x.startswith("branch-"), [x['name'] for x in branches])
+# Assumes branch names can be sorted lexicographically
+latest_branch = sorted(branch_names, reverse=True)[0]
+
+pr_num = raw_input("Which pull request would you like to merge? (e.g. 34): ")
+pr = get_json("%s/pulls/%s" % (GIT_API_BASE, pr_num))
+
+url = pr["url"]
+title = pr["title"]
+body = pr["body"]
+target_ref = pr["base"]["ref"]
+user_login = pr["user"]["login"]
+base_ref = pr["head"]["ref"]
+pr_repo_desc = "%s/%s" % (user_login, base_ref)
+
+if pr["merged"] == True:
+  print "Pull request %s has already been merged, assuming you want to backport" % pr_num
+  merge_commit_desc = run_cmd(['git', 'log', '--merges', '--first-parent', 
+    '--grep=pull request #%s' % pr_num, '--oneline']).split("\n")[0]
+  if merge_commit_desc == "":
+    fail("Couldn't find any merge commit for #%s, you may need to update HEAD." % pr_num)
+
+  merge_hash = merge_commit_desc[:7]  
+  message = merge_commit_desc[8:]
+  
+  print "Found: %s" % message
+  maybe_cherry_pick(pr_num, merge_hash, latest_branch)
+  sys.exit(0)
+
+if bool(pr["mergeable"]) == False:
+  fail("Pull request %s is not mergeable in its current form" % pr_num)
+
+print ("\n=== Pull Request #%s ===" % pr_num)
+print("title\t%s\nsource\t%s\ntarget\t%s\nurl\t%s" % (
+  title, pr_repo_desc, target_ref, url))
+continue_maybe("Proceed with merging pull request #%s?" % pr_num)
+
+merge_hash = merge_pr(pr_num, target_ref)
+
 while True:
-  maybe_cherry_pick()
+  maybe_cherry_pick(pr_num, merge_hash, latest_branch)
