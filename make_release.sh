@@ -7,8 +7,7 @@
 # Would be nice to add:
   # Re-write in Python
   # Send output to stderr and have useful logging in stdout
-  # Have this call the maven release plugin to actually create
-  #  releases
+  # Have this use sbt rather than Maven release plug in
 
 GIT_USERNAME=pwendell
 GIT_PASSWORD=XXX

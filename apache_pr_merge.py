@@ -119,10 +119,8 @@ def maybe_cherry_pick(pr_num, merge_hash, default_branch):
 
   run_cmd("git fetch %s %s:%s" % (PUSH_REMOTE_NAME, pick_ref, pick_branch_name))
   run_cmd("git checkout %s" % pick_branch_name)
-  #run_cmd("git cherry-pick -sx %s" % merge_hash)
+  run_cmd("git cherry-pick -sx %s" % merge_hash)
   
-  run_cmd("git cherry-pick -sx -m 1 %s" % merge_hash) # For older merge style
-
   continue_maybe("Pick complete (local ref %s). Push to %s?" % (
     pick_branch_name, PUSH_REMOTE_NAME))
 
