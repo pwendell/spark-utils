@@ -10,8 +10,8 @@ import time
     with the Spark EC2 scripts.
 """
 
-SPARK_SHELL =   "./spark/spark-shell"
-PYSPARK_SHELL = "./spark/pyspark"
+SPARK_SHELL =   "./spark/bin/spark-shell"
+PYSPARK_SHELL = "./spark/bin/pyspark"
 SHARK_SHELL =   "./shark/shark-withinfo"
 HDFS_BIN =      "./ephemeral-hdfs/bin/hadoop dfs"
 
@@ -30,7 +30,9 @@ for mount in ephemeral_mounts:
   print "Ephemeral mount: %s" % mount
   assert os.path.exists(mount) and os.path.isdir(mount), ("Mount point %s is referenced in "
     "ephemeral HDFS config, but is not a directory." % mount) 
-system_mounts = filter(lambda x: x.startswith("mnt"), os.listdir("/"))
+    
+# Get the actual mount points 
+system_mounts = run_cmd("mount | awk '{print $3}' | grep '/mnt' | sed 's,^\/,,'").strip().split("\n")
 for sys_mount in system_mounts:
   path = "/%s" % sys_mount
   assert path in ephemeral_mounts, "Mount point %s not used in ephemeral HDFS config." % path
