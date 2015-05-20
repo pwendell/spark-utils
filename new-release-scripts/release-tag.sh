@@ -1,0 +1,56 @@
+#!/bin/bash
+
+function exit_with_usage {
+  cat << EOF
+usage: tag-release.sh
+Tags a Spark release on a particular branch.
+
+Inputs are specified with the following environment variables:
+ASF_USERNAME - Apache Username
+ASF_PASSWORD - Apache Password
+GIT_BRANCH - Git branch on which to make release
+RELEASE_VERSION - Version used in pom files for release
+NEXT_VERSION - Development version after release
+EOF
+  exit 1
+}
+
+set -e
+
+if [[ $@ == *"help"* ]]; then
+  exit_with_usage
+fi
+
+for env in ASF_USERNAME ASF_PASSWORD RELEASE_VERSION NEXT_VERSION GIT_BRANCH; do
+  if [ -z "${!env}" ]; then
+    echo "$env must be set to run this script"
+    exit 1
+  fi
+done
+
+ASF_SPARK_REPO="git-wip-us.apache.org/repos/asf/spark.git"
+
+rm -rf spark
+git clone https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_SPARK_REPO -b $GIT_BRANCH
+cd spark
+
+# Create release version
+mvn versions:set -DnewVersion=$SPARK_VERSION
+git_tag="v$SPARK_VERSION"
+git commit -a -m "Preparing Spark release $SPARK_VERSION"
+echo "Creating tag $git_tag at the head of $GIT_BRANCH"
+git tag $git_tag
+
+# TODO: It would be nice to do some verifications here
+#       i.e. check whether ec2 scripts have the new version
+
+# Create next version
+mvn versions:set -DnewVersion=$NEXT_VERSION
+git commit -a -m "Preparing development version $next_ver"
+
+# Push changes
+git push origin $GIT_TAG
+git push origin HEAD:$GIT_BRANCH
+
+cd ..
+rm -rf spark
