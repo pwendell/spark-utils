@@ -186,7 +186,7 @@ if [[ "$1" == "publish-snapshot" ]]; then
   echo "<id>apache.snapshots.https</id><username>$ASF_USERNAME</username>" >> $tmp_settings
   echo "<password>$ASF_PASSWORD</password>" >> $tmp_settings
   echo "</server></servers></settings>" >> $tmp_settings
-  build/mvn deploy --settings $tmp_settings
+  build/mvn deploy --settings $tmp_settings -DskipTests
   rm $tmp_settings
   cd ..
   exit 0
