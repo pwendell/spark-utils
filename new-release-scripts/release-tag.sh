@@ -46,7 +46,7 @@ git tag $RELEASE_TAG
 
 # Create next version
 mvn versions:set -DnewVersion=$NEXT_VERSION
-git commit -a -m "Preparing development version $next_ver"
+git commit -a -m "Preparing development version $NEXT_VERSION"
 
 # Push changes
 git push origin $RELEASE_TAG
