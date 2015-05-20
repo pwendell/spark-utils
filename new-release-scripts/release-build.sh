@@ -66,7 +66,7 @@ git checkout --force $GIT_TAG
 git_hash=`git rev-parse --short HEAD`
 
 if [ -z "$SPARK_VERSION" ]; then
-  SPARK_VERSION=$(mvn help:evaluate -Dexpression=project.version | grep -v INFO)
+  SPARK_VERSION=$(build/mvn help:evaluate -Dexpression=project.version | grep -v INFO)
 fi
 
 if [ -z "$SPARK_PACKAGE_VERSION" ]; then
@@ -180,13 +180,13 @@ if [[ "$1" == "publish-snapshot" ]]; then
     exit 1
   fi
   # Coerce the requested version
-  mvn versions:set -DnewVersion=$SPARK_VERSION
+  build/mvn versions:set -DnewVersion=$SPARK_VERSION
   tmp_settings="tmp-settings.xml"
   echo "<settings><servers><server>" > $tmp_settings
   echo "<id>apache.snapshots.https</id><username>$ASF_USERNAME</username>" >> $tmp_settings
   echo "<password>$ASF_PASSWORD</password>" >> $tmp_settings
   echo "</server></servers></settings>" >> $tmp_settings
-  mvn deploy --settings $tmp_settings
+  build/mvn deploy --settings $tmp_settings
   rm $tmp_settings
   cd ..
   exit 0
@@ -198,7 +198,7 @@ if [[ "$1" == "publish-release" ]]; then
   echo "Publishing Spark checkout at '$GIT_REF' ($git_hash)"
   echo "Publish version is $SPARK_VERSION"
   # Coerce the requested version
-  mvn versions:set -DnewVersion=$SPARK_VERSION
+  build/mvn versions:set -DnewVersion=$SPARK_VERSION
 
   # Using Nexus API documented here:
   # https://support.sonatype.com/entries/39720203-Uploading-to-a-Staging-Repository-via-REST-API
