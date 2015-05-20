@@ -36,7 +36,7 @@ git clone https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_SPARK_REPO -b $GIT_BRANCH
 cd spark
 
 # Create release version
-mvn versions:set -DnewVersion=$SPARK_VERSION
+mvn versions:set -DnewVersion=$RELEASE_VERSION
 git commit -a -m "Preparing Spark release $RELEASE_TAG"
 echo "Creating tag $RELEASE_TAG at the head of $GIT_BRANCH"
 git tag $RELEASE_TAG
