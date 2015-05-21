@@ -69,7 +69,7 @@ git checkout --force $GIT_TAG
 git_hash=`git rev-parse --short HEAD`
 
 if [ -z "$SPARK_VERSION" ]; then
-  SPARK_VERSION=$(mvn help:evaluate -Dexpression=project.version | grep -v INFO)
+  SPARK_VERSION=$(mvn help:evaluate -Dexpression=project.version | grep -v INFO | grep -v Download)
 fi
 
 if [ -z "$SPARK_PACKAGE_VERSION" ]; then
