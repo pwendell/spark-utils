@@ -31,15 +31,17 @@ for env in ASF_USERNAME ASF_PASSWORD RELEASE_VERSION RELEASE_TAG NEXT_VERSION GI
 done
 
 ASF_SPARK_REPO="git-wip-us.apache.org/repos/asf/spark.git"
-GIT_OPTS="-c user.name=$ASF_USERNAME -c user.email=$GIT_EMAIL"
 
 rm -rf spark
 git clone https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_SPARK_REPO -b $GIT_BRANCH
 cd spark
 
+git config --local user.name $ASF_USERNAME
+git config --local user.email $GIT_EMAIL
+
 # Create release version
 mvn versions:set -DnewVersion=$RELEASE_VERSION | grep -v "no value" # silence logs
-git commit $GIT_OPTS -a -m "Preparing Spark release $RELEASE_TAG"
+git commit -a -m "Preparing Spark release $RELEASE_TAG"
 echo "Creating tag $RELEASE_TAG at the head of $GIT_BRANCH"
 git tag $RELEASE_TAG
 
@@ -48,7 +50,7 @@ git tag $RELEASE_TAG
 
 # Create next version
 mvn versions:set -DnewVersion=$NEXT_VERSION | grep -v "no value" # silence logs
-git commit $GIT_OPTS -a -m "Preparing development version $NEXT_VERSION"
+git commit -a -m "Preparing development version $NEXT_VERSION"
 
 # Push changes
 git push origin $RELEASE_TAG
