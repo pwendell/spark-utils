@@ -55,6 +55,7 @@ REMOTE_PARENT_DIR=${REMOTE_PARENT_DIR:-/home/$ASF_USERNAME/public_html}
 
 SSH="ssh -o StrictHostKeyChecking=no -i $ASF_RSA_KEY"
 SCP="scp -o StrictHostKeyChecking=no -i $ASF_RSA_KEY"
+GPG="gpg --no-tty --batch"
 NEXUS_ROOT=https://repository.apache.org/service/local/staging
 NEXUS_PROFILE=d63f592e7eac0 # Profile for Spark staging uploads
 BASE_DIR=$(pwd)
@@ -96,11 +97,11 @@ if [[ "$1" == "package" ]]; then
   echo "Packaging release tarballs"
   cp -r spark spark-$SPARK_VERSION
   tar cvzf spark-$SPARK_VERSION.tgz spark-$SPARK_VERSION
-  echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --armour --output spark-$SPARK_VERSION.tgz.asc \
-    --no-tty --detach-sig spark-$SPARK_VERSION.tgz
-  echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --print-md MD5 spark-$SPARK_VERSION.tgz > \
+  echo $GPG_PASSPHRASE | $GPG --passphrase-fd 0 --armour --output spark-$SPARK_VERSION.tgz.asc \
+    --detach-sig spark-$SPARK_VERSION.tgz
+  echo $GPG_PASSPHRASE | $GPG --passphrase-fd 0 --print-md MD5 spark-$SPARK_VERSION.tgz > \
     spark-$SPARK_VERSION.tgz.md5
-  echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --print-md \
+  echo $GPG_PASSPHRASE | $GPG --passphrase-fd 0 --print-md \
     SHA512 spark-$SPARK_VERSION.tgz > spark-$SPARK_VERSION.tgz.sha
   rm -rf spark-$SPARK_VERSION
 
@@ -125,13 +126,13 @@ if [[ "$1" == "package" ]]; then
     cd ..
     cp spark-$SPARK_VERSION-bin-$NAME/spark-$SPARK_VERSION-bin-$NAME.tgz .
 
-    echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --armour \
+    echo $GPG_PASSPHRASE | $GPG --passphrase-fd 0 --armour \
       --output spark-$SPARK_VERSION-bin-$NAME.tgz.asc \
       --detach-sig spark-$SPARK_VERSION-bin-$NAME.tgz
-    echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --print-md \
+    echo $GPG_PASSPHRASE | $GPG --passphrase-fd 0 --print-md \
       MD5 spark-$SPARK_VERSION-bin-$NAME.tgz > \
       spark-$SPARK_VERSION-bin-$NAME.tgz.md5
-    echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --print-md \
+    echo $GPG_PASSPHRASE | $GPG --passphrase-fd 0 --print-md \
       SHA512 spark-$SPARK_VERSION-bin-$NAME.tgz > \
       spark-$SPARK_VERSION-bin-$NAME.tgz.sha
   }
@@ -235,7 +236,7 @@ if [[ "$1" == "publish-release" ]]; then
   echo "Creating hash and signature files"
   for file in $(find . -type f)
   do
-    echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --output $file.asc \
+    echo $GPG_PASSPHRASE | $GPG --passphrase-fd 0 --output $file.asc \
       --detach-sig --armour $file;
     if [ $(command -v md5) ]; then
       # Available on OS X; -q to keep only hash
