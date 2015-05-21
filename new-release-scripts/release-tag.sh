@@ -37,7 +37,7 @@ rm -rf spark
 git clone https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_SPARK_REPO -b $GIT_BRANCH
 cd spark
 
-git config user.name $GIT_NAME
+git config user.name "$GIT_NAME"
 git config user.email $GIT_EMAIL
 
 # Create release version
