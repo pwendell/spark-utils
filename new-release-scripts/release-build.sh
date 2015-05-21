@@ -66,8 +66,9 @@ PUBLISH_PROFILES="$PUBLISH_PROFILES -Pspark-ganglia-lgpl -Pkinesis-asl"
 rm -rf spark
 git clone https://git-wip-us.apache.org/repos/asf/spark.git
 cd spark
-git checkout --force $GIT_TAG
+git checkout $GIT_TAG
 git_hash=`git rev-parse --short HEAD`
+echo "Checked out Spark git hash $git_hash"
 
 if [ -z "$SPARK_VERSION" ]; then
   SPARK_VERSION=$(mvn help:evaluate -Dexpression=project.version | grep -v INFO | grep -v Download)
