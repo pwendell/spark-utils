@@ -97,11 +97,11 @@ if [[ "$1" == "package" ]]; then
   cp -r spark spark-$SPARK_VERSION
   tar cvzf spark-$SPARK_VERSION.tgz spark-$SPARK_VERSION
   echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --armour --output spark-$SPARK_VERSION.tgz.asc \
-    --detach-sig spark-$SPARK_VERSION.tgz
-  echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --print-md MD5 spark-$SPARK_VERSION.tgz > \
+    --no-tty --detach-sig spark-$SPARK_VERSION.tgz
+  echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --print-md MD5 spark-$SPARK_VERSION.tgz > \
     spark-$SPARK_VERSION.tgz.md5
-  echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --print-md SHA512 spark-$SPARK_VERSION.tgz > \
-    spark-$SPARK_VERSION.tgz.sha
+  echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --print-md \
+    SHA512 spark-$SPARK_VERSION.tgz > spark-$SPARK_VERSION.tgz.sha
   rm -rf spark-$SPARK_VERSION
 
   # Updated for each binary build
@@ -125,13 +125,13 @@ if [[ "$1" == "package" ]]; then
     cd ..
     cp spark-$SPARK_VERSION-bin-$NAME/spark-$SPARK_VERSION-bin-$NAME.tgz .
 
-    echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --armour \
+    echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --armour \
       --output spark-$SPARK_VERSION-bin-$NAME.tgz.asc \
       --detach-sig spark-$SPARK_VERSION-bin-$NAME.tgz
-    echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --print-md \
+    echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --print-md \
       MD5 spark-$SPARK_VERSION-bin-$NAME.tgz > \
       spark-$SPARK_VERSION-bin-$NAME.tgz.md5
-    echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --print-md \
+    echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --print-md \
       SHA512 spark-$SPARK_VERSION-bin-$NAME.tgz > \
       spark-$SPARK_VERSION-bin-$NAME.tgz.sha
   }
@@ -234,7 +234,8 @@ if [[ "$1" == "publish-release" ]]; then
   echo "Creating hash and signature files"
   for file in $(find . -type f)
   do
-    echo $GPG_PASSPHRASE | gpg --passphrase-fd 0 --output $file.asc --detach-sig --armour $file;
+    echo $GPG_PASSPHRASE | gpg --no-tty --passphrase-fd 0 --output $file.asc \
+      --detach-sig --armour $file;
     if [ $(command -v md5) ]; then
       # Available on OS X; -q to keep only hash
       md5 -q $file > $file.md5
