@@ -8,6 +8,7 @@ Tags a Spark release on a particular branch.
 Inputs are specified with the following environment variables:
 ASF_USERNAME - Apache Username
 ASF_PASSWORD - Apache Password
+GIT_NAME - Name to use with git
 GIT_EMAIL - E-mail address to use with git
 GIT_BRANCH - Git branch on which to make release
 RELEASE_VERSION - Version used in pom files for release
@@ -23,7 +24,7 @@ if [[ $@ == *"help"* ]]; then
   exit_with_usage
 fi
 
-for env in ASF_USERNAME ASF_PASSWORD RELEASE_VERSION RELEASE_TAG NEXT_VERSION GIT_EMAIL GIT_BRANCH; do
+for env in ASF_USERNAME ASF_PASSWORD RELEASE_VERSION RELEASE_TAG NEXT_VERSION GIT_EMAIL GIT_NAME GIT_BRANCH; do
   if [ -z "${!env}" ]; then
     echo "$env must be set to run this script"
     exit 1
@@ -36,7 +37,7 @@ rm -rf spark
 git clone https://$ASF_USERNAME:$ASF_PASSWORD@$ASF_SPARK_REPO -b $GIT_BRANCH
 cd spark
 
-git config user.name $ASF_USERNAME
+git config user.name $GIT_NAME
 git config user.email $GIT_EMAIL
 
 # Create release version
