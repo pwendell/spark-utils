@@ -54,7 +54,6 @@ GIT_REF=${GIT_REF:-master}
 REMOTE_PARENT_DIR=${REMOTE_PARENT_DIR:-/home/$ASF_USERNAME/public_html}
 
 SSH="ssh -o StrictHostKeyChecking=no -i $ASF_RSA_KEY"
-SCP="scp -o StrictHostKeyChecking=no -i $ASF_RSA_KEY"
 GPG="gpg --no-tty --batch"
 NEXUS_ROOT=https://repository.apache.org/service/local/staging
 NEXUS_PROFILE=d63f592e7eac0 # Profile for Spark staging uploads
@@ -155,7 +154,7 @@ if [[ "$1" == "package" ]]; then
   dest_dir="$REMOTE_PARENT_DIR/${DEST_DIR_NAME}-bin"
   echo "Copying release tarballs to $dest_dir"
   $SSH $USER_HOST mkdir $dest_dir
-  $SCP spark-* $USER_HOST:$dest_dir/
+  rsync -e "$SSH" spark-* $USER_HOST:$dest_dir
   exit 0
 fi
 
