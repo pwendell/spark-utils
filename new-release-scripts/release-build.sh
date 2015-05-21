@@ -161,7 +161,8 @@ if [[ "$1" == "docs" ]]; then
   dest_dir="$REMOTE_PARENT_DIR/${DEST_DIR_NAME}-docs"
   cd docs
   # Compile docs with Java 7 to use nicer format
-  JAVA_HOME="$JAVA_7_HOME" PRODUCTION=1 RELEASE_VERSION="$SPARK_VERSION" jekyll build
+  # TODO: Make configurable to add this: PRODUCTION=1
+  RELEASE_VERSION="$SPARK_VERSION" jekyll build
   echo "Copying release documentation to $dest_dir"
   $SSH $USER_HOST mkdir $dest_dir
   rsync -e "$SSH" -r _site/* $USER_HOST:$dest_dir
