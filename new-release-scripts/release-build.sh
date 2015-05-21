@@ -59,7 +59,7 @@ NEXUS_ROOT=https://repository.apache.org/service/local/staging
 NEXUS_PROFILE=d63f592e7eac0 # Profile for Spark staging uploads
 BASE_DIR=$(pwd)
 
-PUBLISH_PROFILES="-Pyarn -Phive -Phive-thriftserver -Phadoop-2.2"
+PUBLISH_PROFILES="-Pyarn -Phive -Phadoop-2.2"
 PUBLISH_PROFILES="$PUBLISH_PROFILES -Pspark-ganglia-lgpl -Pkinesis-asl"
 
 rm -rf spark
@@ -190,7 +190,7 @@ if [[ "$1" == "publish-snapshot" ]]; then
   echo "<id>apache.snapshots.https</id><username>$ASF_USERNAME</username>" >> $tmp_settings
   echo "<password>$ASF_PASSWORD</password>" >> $tmp_settings
   echo "</server></servers></settings>" >> $tmp_settings
-  build/mvn --settings $tmp_settings -DskipTests $PUBLISH_PROFILES deploy
+  build/mvn --settings $tmp_settings -DskipTests $PUBLISH_PROFILES -Phive-thriftserver deploy
   ./dev/change-version-to-2.11.sh
   build/mvn -Dscala-2.11 --settings $tmp_settings -DskipTests $PUBLISH_PROFILES deploy
   rm $tmp_settings
@@ -218,7 +218,8 @@ if [[ "$1" == "publish-release" ]]; then
 
   tmp_repo=$(mktemp -d spark-repo-XXXXX)
 
-  build/mvn -Dmaven.repo.local=$tmp_repo -DskipTests $PUBLISH_PROFILES clean install
+  build/mvn -Dmaven.repo.local=$tmp_repo -DskipTests $PUBLISH_PROFILES -Phive-thriftserver \
+    clean install
 
   ./dev/change-version-to-2.11.sh
 
