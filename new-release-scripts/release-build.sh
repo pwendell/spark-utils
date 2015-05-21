@@ -155,7 +155,7 @@ if [[ "$1" == "package" ]]; then
   dest_dir="$REMOTE_PARENT_DIR/${DEST_DIR_NAME}-bin"
   echo "Copying release tarballs to $dest_dir"
   $SSH $USER_HOST mkdir $dest_dir
-  scp spark-* $USER_HOST:$dest_dir/
+  $SCP spark-* $USER_HOST:$dest_dir/
   exit 0
 fi
 
