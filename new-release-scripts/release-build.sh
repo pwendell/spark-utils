@@ -244,7 +244,7 @@ if [[ "$1" == "publish-release" ]]; then
       # Available on Linux; cut to keep only hash
       md5sum $file | cut -f1 -d' ' > $file.md5
     fi
-    shasum -a 1 $file | cut -f1 -d' ' > $file.sha1
+    sha1sum $file | cut -f1 -d' ' > $file.sha1
   done
 
   nexus_upload=$NEXUS_ROOT/deployByRepositoryId/$staged_repo_id
