@@ -144,9 +144,8 @@ if [[ "$1" == "package" ]]; then
   make_binary_release "cdh4" "-Phadoop-1 -Phive -Phive-thriftserver -Dhadoop.version=2.0.0-mr1-cdh4.2.0" "3032" &
   make_binary_release "hadoop2.3" "-Phadoop-2.3 -Phive -Phive-thriftserver -Pyarn" "3033" &
   make_binary_release "hadoop2.4" "-Phadoop-2.4 -Phive -Phive-thriftserver -Pyarn" "3034" &
-  make_binary_release "mapr3" "-Pmapr3 -Phive -Phive-thriftserver" "3035" &
-  make_binary_release "mapr4" "-Pmapr4 -Pyarn -Phive -Phive-thriftserver" "3036" &
   make_binary_release "hadoop2.4-without-hive" "-Phadoop-2.4 -Pyarn" "3037" &
+  make_binary_release "without-hadoop" "-Phadoop-provided" "3038" &
   wait
   rm -rf spark-$SPARK_VERSION-bin-*/
 
