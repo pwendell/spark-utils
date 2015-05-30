@@ -156,7 +156,7 @@ if [[ "$1" == "package" ]]; then
   $SSH $USER_HOST mkdir $dest_dir
   rsync -e "$SSH" spark-* $USER_HOST:$dest_dir
   echo "Linking /latest-bin to $dest_dir"
-  $SSH $USER_HOST rm "$REMOTE_PARENT_DIR/latest-bin"
+  $SSH $USER_HOST rm -f "$REMOTE_PARENT_DIR/latest-bin"
   $SSH $USER_HOST ln -s $dest_dir "$REMOTE_PARENT_DIR/latest-bin"
   exit 0
 fi
@@ -173,7 +173,7 @@ if [[ "$1" == "docs" ]]; then
   echo "Copying release documentation to $dest_dir"
   $SSH $USER_HOST mkdir $dest_dir
   echo "Linking /latest-docs to $dest_dir"
-  $SSH $USER_HOST rm "$REMOTE_PARENT_DIR/latest-docs"
+  $SSH $USER_HOST rm -f "$REMOTE_PARENT_DIR/latest-docs"
   $SSH $USER_HOST ln -s $dest_dir "$REMOTE_PARENT_DIR/latest-docs"
   rsync -e "$SSH" -r _site/* $USER_HOST:$dest_dir
   cd ..
