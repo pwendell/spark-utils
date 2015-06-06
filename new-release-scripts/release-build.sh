@@ -137,6 +137,9 @@ if [[ "$1" == "package" ]]; then
       spark-$SPARK_VERSION-bin-$NAME.tgz.sha
   }
 
+  # TODO: Check exit codes of children here:
+  # http://stackoverflow.com/questions/1570262/shell-get-exit-code-of-background-process
+
   # We increment the Zinc port each time to avoid OOM's and other craziness if multiple builds
   # share the same Zinc server.
   make_binary_release "hadoop1" "-Psparkr -Phadoop-1 -Phive -Phive-thriftserver" "3030" &
