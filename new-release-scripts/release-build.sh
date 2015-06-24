@@ -200,9 +200,19 @@ if [[ "$1" == "publish-snapshot" ]]; then
   echo "<id>apache.snapshots.https</id><username>$ASF_USERNAME</username>" >> $tmp_settings
   echo "<password>$ASF_PASSWORD</password>" >> $tmp_settings
   echo "</server></servers></settings>" >> $tmp_settings
-  build/mvn --settings $tmp_settings -DskipTests $PUBLISH_PROFILES -Phive-thriftserver deploy
+
+  # Generate random point for Zinc
+  export ZINC_PORT=$(python -S -c "import random; print random.randrange(3030,4030)")
+
+  build/mvn -DzincPort=$ZINC_PORT --settings $tmp_settings -DskipTests $PUBLISH_PROFILES \
+    -Phive-thriftserver deploy
   ./dev/change-version-to-2.11.sh
-  build/mvn -Dscala-2.11 --settings $tmp_settings -DskipTests $PUBLISH_PROFILES deploy
+  build/mvn -DzincPort=$ZINC_PORT -Dscala-2.11 --settings $tmp_settings \
+    -DskipTests $PUBLISH_PROFILES deploy
+
+  # Clean-up Zinc nailgun process
+  /usr/sbin/lsof -P |grep $ZINC_PORT | grep LISTEN | awk '{ print $2; }' | xargs kill
+
   rm $tmp_settings
   cd ..
   exit 0
@@ -228,12 +238,19 @@ if [[ "$1" == "publish-release" ]]; then
 
   tmp_repo=$(mktemp -d spark-repo-XXXXX)
 
-  build/mvn -Dmaven.repo.local=$tmp_repo -DskipTests $PUBLISH_PROFILES -Phive-thriftserver \
-    clean install
+  # Generate random point for Zinc
+  export ZINC_PORT=$(python -S -c "import random; print random.randrange(3030,4030)")
+
+  build/mvn -DzincPort=$ZINC_PORT -Dmaven.repo.local=$tmp_repo -DskipTests $PUBLISH_PROFILES \
+    -Phive-thriftserver clean install
 
   ./dev/change-version-to-2.11.sh
 
-  build/mvn -Dmaven.repo.local=$tmp_repo -Dscala-2.11 -DskipTests $PUBLISH_PROFILES clean install
+  build/mvn -DzincPort=$ZINC_PORT -Dmaven.repo.local=$tmp_repo -Dscala-2.11 \
+    -DskipTests $PUBLISH_PROFILES clean install
+
+  # Clean-up Zinc nailgun process
+  /usr/sbin/lsof -P |grep $ZINC_PORT | grep LISTEN | awk '{ print $2; }' | xargs kill
 
   ./dev/change-version-to-2.10.sh
 
