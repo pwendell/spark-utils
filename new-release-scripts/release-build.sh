@@ -59,7 +59,7 @@ NEXUS_ROOT=https://repository.apache.org/service/local/staging
 NEXUS_PROFILE=d63f592e7eac0 # Profile for Spark staging uploads
 BASE_DIR=$(pwd)
 
-PUBLISH_PROFILES="-Pyarn -Phive -Phadoop-2.2"
+PUBLISH_PROFILES="-Prelease -Pyarn -Phive -Phadoop-2.2"
 PUBLISH_PROFILES="$PUBLISH_PROFILES -Pspark-ganglia-lgpl -Pkinesis-asl"
 
 rm -rf spark
@@ -172,7 +172,7 @@ if [[ "$1" == "docs" ]]; then
   cd docs
   # Compile docs with Java 7 to use nicer format
   # TODO: Make configurable to add this: PRODUCTION=1
-  RELEASE_VERSION="$SPARK_VERSION" jekyll build
+  PRODUCTION=1 RELEASE_VERSION="$SPARK_VERSION" jekyll build
   echo "Copying release documentation to $dest_dir"
   $SSH $USER_HOST mkdir $dest_dir
   echo "Linking /latest to $dest_dir"
