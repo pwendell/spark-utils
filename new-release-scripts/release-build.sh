@@ -70,7 +70,8 @@ git_hash=`git rev-parse --short HEAD`
 echo "Checked out Spark git hash $git_hash"
 
 if [ -z "$SPARK_VERSION" ]; then
-  SPARK_VERSION=$(mvn help:evaluate -Dexpression=project.version | grep -v INFO | grep -v Download)
+  SPARK_VERSION=$(mvn help:evaluate -Dexpression=project.version \
+    | grep -v INFO | grep -v WARNING | grep -v Download)
 fi
 
 if [ -z "$SPARK_PACKAGE_VERSION" ]; then
