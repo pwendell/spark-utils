@@ -194,7 +194,7 @@ if [[ "$1" == "publish-snapshot" ]]; then
     exit 1
   fi
   # Coerce the requested version
-  build/mvn versions:set -DnewVersion=$SPARK_VERSION
+  build/mvn --force versions:set -DnewVersion=$SPARK_VERSION
   tmp_settings="tmp-settings.xml"
   echo "<settings><servers><server>" > $tmp_settings
   echo "<id>apache.snapshots.https</id><username>$ASF_USERNAME</username>" >> $tmp_settings
@@ -204,10 +204,10 @@ if [[ "$1" == "publish-snapshot" ]]; then
   # Generate random point for Zinc
   export ZINC_PORT=$(python -S -c "import random; print random.randrange(3030,4030)")
 
-  build/mvn -DzincPort=$ZINC_PORT --settings $tmp_settings -DskipTests $PUBLISH_PROFILES \
+  build/mvn --force -DzincPort=$ZINC_PORT --settings $tmp_settings -DskipTests $PUBLISH_PROFILES \
     -Phive-thriftserver deploy
   ./dev/change-version-to-2.11.sh
-  build/mvn -DzincPort=$ZINC_PORT -Dscala-2.11 --settings $tmp_settings \
+  build/mvn --force -DzincPort=$ZINC_PORT -Dscala-2.11 --settings $tmp_settings \
     -DskipTests $PUBLISH_PROFILES deploy
 
   # Clean-up Zinc nailgun process
@@ -224,7 +224,7 @@ if [[ "$1" == "publish-release" ]]; then
   echo "Publishing Spark checkout at '$GIT_REF' ($git_hash)"
   echo "Publish version is $SPARK_VERSION"
   # Coerce the requested version
-  build/mvn versions:set -DnewVersion=$SPARK_VERSION
+  build/mvn --force versions:set -DnewVersion=$SPARK_VERSION
 
   # Using Nexus API documented here:
   # https://support.sonatype.com/entries/39720203-Uploading-to-a-Staging-Repository-via-REST-API
