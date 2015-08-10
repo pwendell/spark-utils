@@ -59,7 +59,7 @@ NEXUS_ROOT=https://repository.apache.org/service/local/staging
 NEXUS_PROFILE=d63f592e7eac0 # Profile for Spark staging uploads
 BASE_DIR=$(pwd)
 
-PUBLISH_PROFILES="-Prelease -Pyarn -Phive -Phadoop-2.2"
+PUBLISH_PROFILES="-Pyarn -Phive -Phadoop-2.2"
 PUBLISH_PROFILES="$PUBLISH_PROFILES -Pspark-ganglia-lgpl -Pkinesis-asl"
 
 rm -rf spark
@@ -117,7 +117,7 @@ if [[ "$1" == "package" ]]; then
 
     # TODO There should probably be a flag to make-distribution to allow 2.11 support
     if [[ $FLAGS == *scala-2.11* ]]; then
-      ./dev/change-version-to-2.11.sh
+      ./dev/change-scala-version.sh 2.11
     fi
 
     export ZINC_PORT=$ZINC_PORT
@@ -207,7 +207,7 @@ if [[ "$1" == "publish-snapshot" ]]; then
 
   build/mvn --force -DzincPort=$ZINC_PORT --settings $tmp_settings -DskipTests $PUBLISH_PROFILES \
     -Phive-thriftserver deploy
-  ./dev/change-version-to-2.11.sh
+  ./dev/change-scala-version.sh 2.10
   build/mvn --force -DzincPort=$ZINC_PORT -Dscala-2.11 --settings $tmp_settings \
     -DskipTests $PUBLISH_PROFILES deploy
 
@@ -245,7 +245,7 @@ if [[ "$1" == "publish-release" ]]; then
   build/mvn -DzincPort=$ZINC_PORT -Dmaven.repo.local=$tmp_repo -DskipTests $PUBLISH_PROFILES \
     -Phive-thriftserver clean install
 
-  ./dev/change-version-to-2.11.sh
+  ./dev/change-scala-version.sh 2.11
 
   build/mvn -DzincPort=$ZINC_PORT -Dmaven.repo.local=$tmp_repo -Dscala-2.11 \
     -DskipTests $PUBLISH_PROFILES clean install
